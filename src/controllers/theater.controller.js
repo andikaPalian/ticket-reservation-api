@@ -1,0 +1,1 @@
+import { addTheater, getAllTheaters,getTheaterById, updateTheater, deleteTheater } from "../services/theater.service";

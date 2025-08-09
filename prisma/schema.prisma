@@ -1,0 +1,173 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  THEATHER_ADMIN
+  ADMIN
+}
+
+enum TicketStatus {
+  PENDING
+  CONFIRMED
+  USED
+  CANCELED
+  EXPIRED
+  // REFUNDED
+}
+
+enum SeatType {
+  REGULAR
+  VIP
+  PREMIUM
+  // ADD MORE SEAT TYPES AS NEEDED
+}
+
+enum Genre {
+  ACTION
+  COMEDY
+  DRAMA
+  HORROR
+  SCIFI
+  THRILLER
+  ANIMATION
+  DOCUMENTARY
+  ROMANCE
+  FANTASY
+  FAMILY
+}
+
+model Admin {
+  adminId   String      @id @default(uuid())
+  username  String      @unique
+  password  String
+  role      AdminRole   
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  theater   Theaters[]
+}
+
+model User {
+  userId    String      @id @default(uuid())
+  email     String      @unique
+  password  String
+  name      String
+  // theaters  Theaters[]
+  // seats     Seats[]
+  tickets   Tickets[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model Theaters {
+  theaterId        String      @id @default(uuid())
+  name              String
+  location          String
+  theaterCapacity   Int
+  phone             String?
+  email             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  screens           Screens[]
+  admin             Admin[] 
+}
+
+// Studio
+model Screens {
+  screenId            String      @id @default(uuid())
+  name                String  // Example: Studio 1, Studio 2
+  screenCapacity      Int
+  theaterId           String
+  theater             Theaters    @relation(fields: [theaterId], references: [theaterId])
+  schedules           MovieSchedules[]
+  seats               Seats[]
+}
+
+model Seats {
+  seatId        String      @id @default(uuid())
+  seatRow       String
+  seatNumber    String
+  seatType      SeatType
+  seatPrice     Decimal     @db.Decimal(10, 2)
+  isAvailable   Boolean     @default(true)
+  screenId      String
+  screen        Screens     @relation(fields: [screenId], references: [screenId])
+  // users         User[]
+  tickets       Tickets[]
+}
+
+model Movies {
+  movieId           String           @id @default(uuid())
+  title             String
+  description       String
+  duration          Int
+  releaseDate       DateTime
+  posterUrl         String?
+  posterPublicId    String?
+  trailerUrl        String?
+  trailerPublicId   String?
+  genre             Genre
+  language          String
+  rating            String
+  director          String?
+  cast              Cast[]
+  isPublished       Boolean         @default(false)
+  schedules         MovieSchedules[]
+  // theaters          Theaters[]
+}
+
+model Cast {
+  castId            String      @id @default(uuid())
+  name              String
+  role              String?
+  movieId           String
+  movie             Movies      @relation(fields: [movieId], references: [movieId])
+}
+
+model MovieSchedules {
+  scheduleId        String      @id @default(uuid())
+  startTime         DateTime
+  endTime           DateTime
+  movieID           String
+  movie             Movies      @relation(fields: [movieID], references: [movieId])
+  screenId          String
+  screen            Screens     @relation(fields: [screenId], references: [screenId])
+  tickets           Tickets[]
+}
+
+model Tickets {
+  ticketId           String         @id @default(uuid())
+  ticketNumber       String         @unique
+  price              Decimal  
+  status             TicketStatus   @default(PENDING)
+  scheduleID         String
+  schedule           MovieSchedules @relation(fields: [scheduleID], references: [scheduleId])
+  userID             String
+  user               User           @relation(fields: [userID], references: [userId])
+  stripe             Stripe         @relation(fields: [stripeID], references: [stripeId])
+  stripeID           String         
+  seatID             String?
+  seat               Seats?          @relation(fields: [seatID], references: [seatId])
+  seatType           String?
+  bookTime           DateTime        @default(now())
+}
+
+model Stripe {
+  stripeId           String       @id @default(uuid())
+  customerID         String       @unique
+  paymentMethodID    String?       @unique
+  tickets            Tickets[]
+}
