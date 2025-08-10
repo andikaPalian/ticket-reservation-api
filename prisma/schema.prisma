@@ -106,7 +106,7 @@ model Seats {
   seatId        String      @id @default(uuid())
   seatRow       String
   seatNumber    String
-  seatType      SeatType
+  seatType      SeatType    @default(REGULAR)
   seatPrice     Decimal     @db.Decimal(10, 2)
   isAvailable   Boolean     @default(true)
   screenId      String
