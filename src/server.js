@@ -8,6 +8,7 @@ import { userAuthRouter } from './routes/userAuth.routes.js';
 import { adminAuthRouter } from './routes/adminAuth.routes.js';
 import { connectCloudinary } from './config/cloudinary.js';
 import { movieRouter } from './routes/movie.routes.js';
+import { theaterRouter } from './routes/theater.routes.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -21,6 +22,7 @@ app.use(morgan('dev'));
 app.use('/api/user/auth', userAuthRouter);
 app.use('/api/admin/auth', adminAuthRouter);
 app.use('/api/movies', movieRouter);
+app.use('/api/theaters', theaterRouter);
 
 // Handle multer errors
 app.use((err, req, res, next) => {
