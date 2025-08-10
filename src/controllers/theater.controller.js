@@ -215,7 +215,7 @@ export const deleteScreenController = async (req, res, next) => {
     }
 };
 
-export const updateScreenStats = async (req, res, next) => {
+export const updateScreenSeatsController = async (req, res, next) => {
     try {
         const adminId = req.admin.adminId;
         const {theaterId, screenId} = req.params;
