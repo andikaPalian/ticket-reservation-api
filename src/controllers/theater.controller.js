@@ -20,7 +20,7 @@ export const addTheaterController = async (req, res, next) => {
 
 export const getAllTheatersController = async (req, res, next) => {
     try {
-        const theaters = await getAllScreens(req.query);
+        const theaters = await getAllTheaters(req.query);
 
         if (theaters.length === 0) {
             return res.status(200).json({
