@@ -101,8 +101,9 @@ export const createTheaterScreenController = async (req, res, next) => {
     try {
         const adminId = req.admin.adminId;
         const {theaterId} = req.params;
+        const {screenData, seatsData} = req.body;
 
-        const newScreen = await createTheaterScreen(adminId, theaterId, req.body);
+        const newScreen = await createTheaterScreen(adminId, theaterId, screenData, seatsData);
 
         return res.status(201).json({
             success: true,
