@@ -162,7 +162,7 @@ export const getScreenByTheaterController = async (req, res, next) => {
     }
 };
 
-export const getScreenById = async (req, res, next) => {
+export const getScreenByIdController = async (req, res, next) => {
     try {
         const {screenId} = req.params;
 
