@@ -18,12 +18,18 @@ export const addTheater = async (adminId, theaterData) => {
             throw new AppError("Unauthorized: You do not have permission to add theaters", 401);
         }
 
-        const {name, location, phone, email} = theaterData;
+        const {name, address, city, state, postalCode,latitude, longitude, phone, email} = theaterData;
 
         const newTheater = await prisma.theaters.create({
             data: {
                 name: name,
-                location: location,
+                address: address,
+                city: city,
+                state: state,
+                postalCode: postalCode,
+                latitude: latitude,
+                longitude: longitude,
+                // location: location,
                 // capacity: capacity,
                 phone: phone,
                 email: email
@@ -107,7 +113,13 @@ export const updateTheater = async (adminId, theaterId, theaterData) => {
         const updateData = {};
 
         if (theaterData.name !== undefined) updateData.name = theaterData.name;
-        if (theaterData.location !== undefined) updateData.location = theaterData.location;
+        if (theaterData.address !== undefined) updateData.address = theaterData.address;
+        if (theaterData.city !== undefined) updateData.city = theaterData.city;
+        if (theaterData.state !== undefined) updateData.state = theaterData.state;
+        if (theaterData.postalCode !== undefined) updateData.postalCode = theaterData.postalCode;
+        if (theaterData.latitude !== undefined) updateData.latitude = theaterData.latitude;
+        if (theaterData.longitude !== undefined) updateData.longitude = theaterData.longitude;
+        // if (theaterData.location !== undefined) updateData.location = theaterData.location;
         if (theaterData.phone !== undefined) updateData.phone = theaterData.phone;
         if (theaterData.email !== undefined) updateData.email = theaterData.email;
 
@@ -138,6 +150,26 @@ export const deleteTheater = async (adminId, theaterId) => {
 
         if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(theaterAdmin.role)) {
             throw new AppError("Unauthorized: You do not have permission to delete theaters", 401);
+        }
+
+        const theater = await prisma.theaters.findUnique({
+            where: {
+                theaterId: theaterId
+            },
+            include: {
+                screens: true
+            }
+        });
+        if (!theater) {
+            throw new AppError("Theater not found", 404);
+        }
+
+        if (theater.screens.length > 0) {
+            await prisma.screens.deleteMany({
+                where: {
+                    theaterId: theaterId
+                }
+            });
         }
 
         await prisma.theaters.delete({

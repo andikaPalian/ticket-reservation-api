@@ -75,7 +75,13 @@ model User {
 model Theaters {
   theaterId        String      @id @default(uuid())
   name              String
-  location          String
+  address           String // Jalan dan nomor
+  city              String
+  state             String // Provinsi
+  postalCode        String
+  latitude          Float?
+  longitude         Float?
+  // location          String
   theaterCapacity   Int
   phone             String?
   email             String?
