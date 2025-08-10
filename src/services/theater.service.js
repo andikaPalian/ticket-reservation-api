@@ -664,3 +664,39 @@ export const getSeatsByScreen = async (screenId) => {
         throw error;
     }
 };
+
+export const getSeatsById = async (screenId, seatId) => {
+    try {
+        const screen = await prisma.screens.findUnique({
+            where: {
+                screenId: screenId
+            }
+        });
+        if (!screen) {
+            throw new AppError("Screen not found", 404);
+        }
+
+        const seat = await prisma.seats.findUnique({
+            where: {
+                seatId: seatId
+            }
+        });
+        if (!seat) {
+            throw new AppError("Seat not found", 404);
+        }
+
+        // const seatName = `${seat.seatRow} + ${seat.seatNumber}`;
+        const seatName = seat.seatRow + seat.seatNumber;
+
+        return {
+            seatId: seat.seatId,
+            seat: seatName,
+            seatType: seat.seatType,
+            seatPrice: seat.seatPrice,
+            isAvailable: seat.isAvailable
+        };
+    } catch (error) {
+        console.error("Error fetching seat: ", error);
+        throw error;
+    }
+};
