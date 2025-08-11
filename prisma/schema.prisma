@@ -147,11 +147,14 @@ model MovieSchedules {
   scheduleId        String      @id @default(uuid())
   startTime         DateTime
   endTime           DateTime
-  movieID           String
-  movie             Movies      @relation(fields: [movieID], references: [movieId])
+  movieId           String
+  movie             Movies      @relation(fields: [movieId], references: [movieId])
   screenId          String
   screen            Screens     @relation(fields: [screenId], references: [screenId])
   tickets           Tickets[]
+
+  @@index([movieId, startTime])
+  @@index([screenId])
 }
 
 model Tickets {
@@ -159,14 +162,14 @@ model Tickets {
   ticketNumber       String         @unique
   price              Decimal  
   status             TicketStatus   @default(PENDING)
-  scheduleID         String
-  schedule           MovieSchedules @relation(fields: [scheduleID], references: [scheduleId])
-  userID             String
-  user               User           @relation(fields: [userID], references: [userId])
-  stripe             Stripe         @relation(fields: [stripeID], references: [stripeId])
-  stripeID           String         
-  seatID             String?
-  seat               Seats?          @relation(fields: [seatID], references: [seatId])
+  scheduleId         String
+  schedule           MovieSchedules @relation(fields: [scheduleId], references: [scheduleId])
+  userId             String
+  user               User           @relation(fields: [userId], references: [userId])
+  stripe             Stripe         @relation(fields: [stripeId], references: [stripeId])
+  stripeId           String         
+  seatId             String?
+  seat               Seats?          @relation(fields: [seatId], references: [seatId])
   seatType           String?
   bookTime           DateTime        @default(now())
 }
