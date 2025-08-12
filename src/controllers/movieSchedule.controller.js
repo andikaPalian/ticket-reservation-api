@@ -1,4 +1,4 @@
-import { createMovieSchedule, getAllSchedules, getScheduleById, getScheduleByMovie, findAvailableScreen, findAvailableSeats, updateSchedule, deleteSchedule } from "../services/movieSchedule.service.js";
+import { createMovieSchedule, getAllSchedules, getScheduleById, getScheduleByMovie, findAvailableScreen, findAvailableSeats, updateSchedule, deleteSchedule, getAvailableSeatsBySchedule, getScheduleByDate, getScheduleByScreen } from "../services/movieSchedule.service.js";
 
 export const createMovieScheduleController = async (req, res, next) => {
     try {
@@ -81,6 +81,62 @@ export const getScheduleByMovieController = async (req, res, next) => {
     }
 };
 
+export const getScheduleByScreenController = async (req, res, next) => {
+    try {
+        const {screenId} = req.params;
+
+        const schedule = await getScheduleByScreen(screenId);
+
+        if (schedule.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No schedule found",
+                data: {
+                    schedule: []
+                }
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Schedule fetched successfully",
+            data: {
+                schedule: schedule
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getScheduleByDateController = async (req, res, next) => {
+    try {
+        const {date} = req.query;
+
+        const schedule = await getScheduleByDate(date);
+
+        if (schedule.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No schedule found",
+                data: {
+                    schedule: []
+                }
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Schedule fetched successfully",
+            data: {
+                schedule: schedule
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const findAvailableScreenController = async (req, res, next) => {
     try {
         const adminId = req.admin.adminId;
@@ -132,6 +188,25 @@ export const updateScheduleController = async (req, res, next) => {
             message: "Schedule updated successfully",
             data: {
                 schedule: updatedSchedule
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getAvailableSeatsByScheduleController = async (req, res, next) => {
+    try {
+        const userId = req.user.userId;
+        const {scheduleId} = req.params;
+
+        const availableSeats = await getAvailableSeatsBySchedule(userId, scheduleId);
+
+        return res.status(200).json({
+            success: true,
+            message: "Available seats fetched successfully",
+            data: {
+                seats: availableSeats
             }
         });
     } catch (error) {
