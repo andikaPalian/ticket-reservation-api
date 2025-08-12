@@ -66,7 +66,7 @@ export const createMovieSchedule = async (adminId, scheduleData) => {
 
         const newSchedule = await prisma.movieSchedules.create({
             data: {
-                moviId: movieId,
+                movieId: movieId,
                 screenId: screenId,
                 startTime: startTime,
                 endTime: endTime
@@ -184,11 +184,11 @@ export const findAvailableScreen = async (adminId, theaterId) => {
             }
         });
 
-        screens.map((screen) => {
+        return screens.map((screen) => {
             const availableSeats = seatStats.find((seat) => seat.screenId === screen.screenId && seat.isAvailable === true)?._count.seatId || 0;
 
             const totalSeats = seatStats
-            .find((seat) => seat.screenId === screen.screenId)
+            .filter((seat) => seat.screenId === screen.screenId)
             .reduce((sum, seat) => sum + seat._count.seatId, 0);
 
             return {
