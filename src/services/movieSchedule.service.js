@@ -147,6 +147,52 @@ export const getScheduleByMovie = async (movieId) => {
     }
 };
 
+export const getScheduleByScreen = async (screenId) => {
+    try {
+        const schedule = await prisma.movieSchedules.findMany({
+            where: {
+                screenId: screenId
+            },
+            include: {
+                movie: true,
+                screen: true
+            }
+        });
+
+        return schedule;
+    } catch (error) {
+        console.error("Error fetching movie schedule: ", error);
+        throw error;
+    }
+};
+
+export const getScheduleByDate = async (date) => {
+    try {
+        const start = new Date(date);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(date);
+        end.setHours(23, 59, 59, 999);
+
+        const schedule = await prisma.movieSchedules.findMany({
+            where: {
+                startTime: {
+                    gte: start,
+                    lte: end
+                }
+            },
+            include: {
+                movie: true,
+                screen: true
+            }
+        });
+
+        return schedule;
+    } catch (error) {
+        console.error("Error fetching movie schedule: ", error);
+        throw error;
+    }
+};
+
 export const findAvailableScreen = async (adminId, theaterId) => {
     try {
         const theaterAdmin = await prisma.admin.findUnique({
@@ -224,6 +270,42 @@ export const findAvailableSeats = async (userId, screenId) => {
         return seats;
     } catch (error) {
         console.error("Error finding available seats: ", error);
+        throw error;
+    }
+};
+
+export const getAvailableSeatsBySchedule = async (userId, scheduleId) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                userId: userId
+            }
+        });
+        if (!user) {
+            throw new AppError("User not found", 404);
+        }
+
+        const availableSeats = await prisma.movieSchedules.findUnique({
+            where: {
+                scheduleId: scheduleId
+            },
+            include: {
+                movie: true,
+                screen: {
+                    include: {
+                        seats: {
+                            where: {
+                                isAvailable: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        return availableSeats;
+    } catch (error) {
+        console.error("Error finding available seats by schedule: ", error);
         throw error;
     }
 };
