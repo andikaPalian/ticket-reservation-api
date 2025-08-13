@@ -22,11 +22,10 @@ enum AdminRole {
 
 enum TicketStatus {
   PENDING
-  CONFIRMED
+  PAID
   USED
   CANCELED
   EXPIRED
-  // REFUNDED
 }
 
 enum SeatType {
@@ -159,7 +158,8 @@ model MovieSchedules {
 
 model Tickets {
   ticketId           String         @id @default(uuid())
-  ticketNumber       String         @unique
+  ticketNumber       String         @unique  // Untuk di tampilkan ke UI
+  qrCodeToken        String         @unique  // Untuk qr code scanning 
   price              Decimal  
   status             TicketStatus   @default(PENDING)
   scheduleId         String
@@ -172,11 +172,14 @@ model Tickets {
   seat               Seats?          @relation(fields: [seatId], references: [seatId])
   seatType           String?
   bookTime           DateTime        @default(now())
+
+  @@index([qrCodeToken, status])
 }
 
 model Stripe {
   stripeId           String       @id @default(uuid())
   customerID         String       @unique
   paymentMethodID    String?       @unique
+  paymentStatus      String      @default("PENDING")
   tickets            Tickets[]
 }
