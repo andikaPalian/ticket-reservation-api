@@ -10,6 +10,8 @@ import { connectCloudinary } from './config/cloudinary.js';
 import { movieRouter } from './routes/movie.routes.js';
 import { theaterRouter } from './routes/theater.routes.js';
 import { movieScheduleRouter } from './routes/movieSchedule.routes.js';
+import './cron/cancelUnpaidTicket.js';
+import './cron/ticketsCleanUp.js';
 
 const app = express();
 const port = process.env.PORT || 3000;

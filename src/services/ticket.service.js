@@ -1,0 +1,412 @@
+import { PrismaClient } from "../../generated/prisma/index.js";
+import { AppError } from "../utils/errorHandler.js";
+import QRCode from 'qrcode';
+import { v4 as uuid } from "uuid";
+import { stripe } from "../config/stripe.js";
+
+const prisma = new PrismaClient();
+
+export const createTicket = async (userId, theaterId, scheduleId, seatIds) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                userId: userId
+            }
+        });
+        if (!user) {
+            throw new AppError("User not found", 404);
+        }
+
+        const theater = await prisma.theaters.findUnique({
+            where: {
+                theaterId: theaterId
+            },
+            include: {
+                screens: {
+                    include: {
+                        seats: true
+                    }
+                }
+            }
+        });
+        if (!theater) {
+            throw new AppError("Theater not found", 404);
+        }
+
+        const schedule = await prisma.movieSchedules.findUnique({
+            where: {
+                scheduleId: scheduleId
+            }
+        });
+        if (!schedule) {
+            throw new AppError("Schedule not found", 404);
+        }
+
+        const tickets = await prisma.$transaction(async (tx) => {
+            // Check if the seats are available
+            const seats = await tx.seats.findMany({
+                where: {
+                    seatId: {
+                        in: seatIds
+                    },
+                    isAvailable: true
+                }
+            });
+            if (seats.length !== seatIds.length) {
+                throw new AppError("One or more seats are not available", 400);
+            }
+
+            // Update the seats as unavailable
+            await tx.seats.updateMany({
+                where: {
+                    seatId: {
+                        in: seatIds
+                    }
+                },
+                data: {
+                    isAvailable: false
+                }
+            });
+
+            // Make ticket for every seat
+            const createdTickets = [];
+            for (const seat of seats) {
+                const ticketNumber = `TICKET-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                const ticket = await tx.tickets.create({
+                    data: {
+                        userId: user.userId,
+                        scheduleId: schedule.scheduleId,
+                        seatId: seat.seatId,
+                        seatType: seat.seatType,
+                        price: seat.seatPrice,
+                        ticketNumber: ticketNumber,
+                        status: "PENDING",
+                        bookTime: new Date(),
+                    },
+                });
+                createdTickets.push(ticket);
+            }
+
+            return createdTickets;
+        });
+
+        return tickets;
+    } catch (error) {
+        console.error("Error creating ticket: ", error);
+        throw error;
+    }
+};
+
+export const cancelTicket = async (userId, ticketIds) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                userId: userId
+            }
+        });
+        if (!user) {
+            throw new AppError("User not found", 404);
+        }
+
+        const tickets = await prisma.$transaction(async (tx) => {
+            // Check if the tickets belong to the user
+            const userTickets = await tx.tickets.findMany({
+                where: {
+                    ticketId: {
+                        in: ticketIds
+                    },
+                    userId: user.userId
+                }
+            });
+            if (userTickets.length !== ticketIds.length) {
+                throw new AppError("One or more tickets do not belong to the user", 400);
+            }
+
+            // Update the tickets as cancelled
+            await tx.tickets.updateMany({
+                where: {
+                    ticketId: {
+                        in: ticketIds
+                    }
+                },
+                data: {
+                    status: "CANCELED"
+                }
+            });
+
+            return userTickets;
+        });
+
+        return tickets;
+    } catch (error) {
+        console.error("Error canceling ticket: ", error);
+        throw error;
+    }
+};
+
+export const getAllTickets = async (adminId) => {
+    try {
+        const admin = await prisma.admin.findUnique({
+            where: {
+                adminId: adminId
+            }
+        });
+        if (!admin) {
+            throw new AppError("Admin not found", 404);
+        }
+
+        if (!["SUPER_ADMIN"].includes(admin.role)) {
+            throw new AppError("Unauthorized: You do not have permission to view tickets", 401);
+        }
+
+        const tickets = await prisma.tickets.findMany({
+            include: {
+                user: true,
+                schedule: true,
+                seat: true
+            }
+        });
+
+        return tickets;
+    } catch (error) {
+        console.error("Error getting tickets: ", error);
+        throw error;
+    }
+};
+
+export const getTicketById = async (adminId, ticketId) => {
+    try {
+        const admin = await prisma.admin.findUnique({
+            where: {
+                adminId: adminId
+            }
+        });
+        if (!admin) {
+            throw new AppError("Admin not found", 404);
+        }
+
+        if (!["SUPER_ADMIN"].includes(admin.role)) {
+            throw new AppError("Unauthorized: You do not have permission to view tickets", 401);
+        }
+
+        const ticket = await prisma.tickets.findUnique({
+            where: {
+                ticketId: ticketId
+            },
+            include: {
+                user: true,
+                schedule: true,
+                seat: true
+            }
+        });
+
+        return ticket;
+    } catch (error) {
+        console.error("Error getting ticket: ", error);
+        throw error;
+    }
+};
+
+export const getTicketsByUserId = async (adminId, userId) => {
+    try {
+        const admin = await prisma.admin.findUnique({
+            where: {
+                adminId: adminId
+            }
+        });
+        if (!admin) {
+            throw new AppError("Admin not found", 404);
+        }
+
+        if (!["SUPER_ADMIN"].includes(admin.role)) {
+            throw new AppError("Unauthorized: You do not have permission to view tickets", 401);
+        }
+
+        const tickets = await prisma.tickets.findMany({
+            where: {
+                userId: userId
+            },
+            include: {
+                user: true,
+                schedule: true,
+                seat: true
+            }
+        });
+
+        return tickets;
+    } catch (error) {
+        console.error("Error getting tickets: ", error);
+        throw error;
+    }
+};
+
+export const generateQrCode = async (userId, ticketIds) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                userId: userId
+            }
+        });
+        if (!user) {
+            throw new AppError("User not found", 404);
+        }
+    
+        // Check if the tickets belong to the user
+        const userTickets = await prisma.tickets.findMany({
+            where: {
+                ticketId: {
+                    in: ticketIds
+                },
+                userId: user.userId
+            }
+        });
+        if (userTickets.length !== ticketIds.length) {
+            throw new AppError("One or more tickets do not belong to the user", 400);
+        }
+    
+        const result = [];
+        // Process the tickets
+        for (const ticket of userTickets) {
+            // Validate the ticket
+            if (ticket.status !== "PAID") {
+                throw new AppError(`Ticket ${ticket.ticketNumber} has not been paid. Please pay before generating QR Code`, 400);
+            }
+
+            // Generate the QR Code
+            let qrToken = ticket.qrCodeToken;
+            if (!qrToken) {
+                qrToken = uuid();
+                await prisma.tickets.update({
+                    where: {
+                        ticketId: ticket.ticketId
+                    },
+                    data: {
+                        qrCodeToken: qrToken
+                    }
+                });
+            }
+
+            // Generate QR Code data URL
+            const qrCodeDataUrl = await QRCode.toDataURL(qrToken, {
+                errorCorrectionLevel: "H", // High reliability
+                type: "image/png",
+                width: 300,
+                margin: 2
+            });
+            
+            result.push({
+                ticketId: ticket.ticketId,
+                ticketNumber: ticket.ticketNumber,
+                qrCodeDataUrl
+            });
+        }
+
+        return result;
+    } catch (error) {
+        console.error("Error generating QR Code: ", error);
+        throw error;
+    }
+};
+
+export const updateTicketStatus = async (adminId, ticketId, {status}) => {
+    try {
+        const admin = await prisma.admin.findUnique({
+            where: {
+                adminId: adminId
+            }
+        });
+        if (!admin) {
+            throw new AppError("Admin not found", 404);
+        }
+
+        if (!["SUPER_ADMIN"].includes(admin.role)) {
+            throw new AppError("Unauthorized: You do not have permission to update tickets", 401);
+        }
+
+        const ticket = await prisma.tickets.findUnique({
+            where: {
+                ticketId: ticketId
+            }
+        });
+        if (!ticket) {
+            throw new AppError("Ticket not found", 404);
+        }
+
+        const updatedTicket = await prisma.tickets.update({
+            where: {
+                ticketId: ticketId
+            },
+            data: {
+                status: status
+            }
+        });
+
+        return updatedTicket;
+    } catch (error) {
+        console.error("Error updating ticket status: ", error);
+        throw error;
+    }
+};
+
+export const scanTicket = async (adminId, qrCodeToken) => {
+    try {
+        const admin = await prisma.admin.findUnique({
+            where: {
+                adminId: adminId
+            }
+        });
+        if (!admin) {
+            throw new AppError("Admin not found", 404);
+        }
+
+        if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(admin.role)) {
+            throw new AppError("Unauthorized: You do not have permission to scan tickets", 401);
+        }
+
+        const ticket = await prisma.$transaction(async (tx) => {
+            const foundTicket = await prisma.tickets.findUnique({
+                where: {
+                    qrCodeToken: qrCodeToken
+                },
+                include: {
+                    user: true,
+                    schedule: true,
+                    seat: true
+                }
+            });
+            if (!foundTicket) {
+                throw new AppError("Ticket not found", 404);
+            }
+
+            if (foundTicket.status === "USED") {
+                throw new AppError("Ticket has already been used", 400);
+            }
+
+            if (foundTicket.status !== "PAID") {
+                throw new AppError("Ticket has not been paid", 400)
+            }
+
+            // Update the ticket as used
+            const updatedTicket = await tx.tickets.update({
+                where: {
+                    ticketId: foundTicket.ticketId
+                },
+                data: {
+                    status: "USED"
+                },
+                include: {
+                    user: true,
+                    schedule: true,
+                    seat: true
+                }
+            });
+
+            return updatedTicket;
+        });
+
+        return ticket;
+    } catch (error) {
+        console.error("Error scanning ticket: ", error);
+        throw error;
+    }
+};
