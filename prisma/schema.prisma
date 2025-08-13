@@ -166,7 +166,7 @@ model Tickets {
   schedule           MovieSchedules @relation(fields: [scheduleId], references: [scheduleId])
   userId             String
   user               User           @relation(fields: [userId], references: [userId])
-  stripe             Stripe         @relation(fields: [stripeId], references: [stripeId])
+  stripePaymentIntentId             String?   // Simpan payment intent ID Stripe
   stripeId           String         
   seatId             String?
   seat               Seats?          @relation(fields: [seatId], references: [seatId])
@@ -176,10 +176,10 @@ model Tickets {
   @@index([qrCodeToken, status])
 }
 
-model Stripe {
-  stripeId           String       @id @default(uuid())
-  customerID         String       @unique
-  paymentMethodID    String?       @unique
-  paymentStatus      String      @default("PENDING")
-  tickets            Tickets[]
-}
+// model Stripe {
+//   stripeId           String       @id @default(uuid())
+//   customerID         String       @unique
+//   paymentMethodID    String?       @unique
+//   paymentStatus      String      @default("PENDING")
+//   tickets            Tickets[]
+// }
