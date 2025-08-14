@@ -3,8 +3,7 @@ import { createTicket, cancelTicket, getAllTickets, getTicketById, getTicketsByU
 export const createTicketController = async (req, res, next) => {
     try {
         const userId = req.user.userId;
-        const {theaterId, scheduleId} = req.params;
-        const {seatIds} = req.body;
+        const {theaterId, scheduleId, seatIds} = req.body;
 
         const ticket = await createTicket(userId, theaterId, scheduleId, seatIds);
 
