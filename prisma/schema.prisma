@@ -64,6 +64,7 @@ model User {
   email     String      @unique
   password  String
   name      String
+  stripeCustomerId  String? // Untuk simpan ID customer Stripe
   // theaters  Theaters[]
   // seats     Seats[]
   tickets   Tickets[]
