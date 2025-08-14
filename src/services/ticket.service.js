@@ -155,7 +155,7 @@ export const getAllTickets = async (adminId) => {
             throw new AppError("Admin not found", 404);
         }
 
-        if (!["SUPER_ADMIN"].includes(admin.role)) {
+        if (!["SUPER_ADMIN", "THEATER_ADMIN"].includes(admin.role)) {
             throw new AppError("Unauthorized: You do not have permission to view tickets", 401);
         }
 
@@ -185,7 +185,7 @@ export const getTicketById = async (adminId, ticketId) => {
             throw new AppError("Admin not found", 404);
         }
 
-        if (!["SUPER_ADMIN"].includes(admin.role)) {
+        if (!["SUPER_ADMIN", "THEATER_ADMIN"].includes(admin.role)) {
             throw new AppError("Unauthorized: You do not have permission to view tickets", 401);
         }
 
@@ -207,19 +207,15 @@ export const getTicketById = async (adminId, ticketId) => {
     }
 };
 
-export const getTicketsByUserId = async (adminId, userId) => {
+export const getTicketsByUser = async (userId) => {
     try {
-        const admin = await prisma.admin.findUnique({
+        const user = await prisma.user.findUnique({
             where: {
-                adminId: adminId
+                userId: userId
             }
         });
-        if (!admin) {
-            throw new AppError("Admin not found", 404);
-        }
-
-        if (!["SUPER_ADMIN"].includes(admin.role)) {
-            throw new AppError("Unauthorized: You do not have permission to view tickets", 401);
+        if (!user) {
+            throw new AppError("User not found", 404);
         }
 
         const tickets = await prisma.tickets.findMany({
