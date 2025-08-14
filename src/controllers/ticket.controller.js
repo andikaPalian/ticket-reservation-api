@@ -156,4 +156,4 @@ export const scanTicketController = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-}
+};

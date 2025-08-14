@@ -12,6 +12,7 @@ import { theaterRouter } from './routes/theater.routes.js';
 import { movieScheduleRouter } from './routes/movieSchedule.routes.js';
 import './cron/cancelUnpaidTicket.js';
 import './cron/ticketsCleanUp.js';
+import { ticketRouter } from './routes/ticket.routes.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -27,6 +28,7 @@ app.use('/api/admin/auth', adminAuthRouter);
 app.use('/api/movies', movieRouter);
 app.use('/api/theaters', theaterRouter);
 app.use('/api/chedules', movieScheduleRouter);
+app.use('/api/tickets', ticketRouter);
 
 // Handle multer errors
 app.use((err, req, res, next) => {
@@ -41,4 +43,4 @@ app.use((err, req, res, next) => {
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
-})
+});
