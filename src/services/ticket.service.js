@@ -2,7 +2,7 @@ import { PrismaClient } from "../../generated/prisma/index.js";
 import { AppError } from "../utils/errorHandler.js";
 import QRCode from 'qrcode';
 import { v4 as uuid } from "uuid";
-import { stripe } from "../config/stripe.js";
+// import { stripe } from "../config/stripe.js";
 
 const prisma = new PrismaClient();
 
@@ -308,7 +308,7 @@ export const generateQrCode = async (userId, ticketIds) => {
     }
 };
 
-export const updateTicketStatus = async (adminId, ticketId, {status}) => {
+export const updateTicketStatus = async (adminId, ticketId, status) => {
     try {
         const admin = await prisma.admin.findUnique({
             where: {
@@ -330,6 +330,11 @@ export const updateTicketStatus = async (adminId, ticketId, {status}) => {
         });
         if (!ticket) {
             throw new AppError("Ticket not found", 404);
+        }
+
+        const statuses = ["PAID", "USED", "CANCELED", "EXPIRED"];
+        if (!statuses.includes(status)) {
+            throw new AppError("Invalid status", 400);
         }
 
         const updatedTicket = await prisma.tickets.update({
@@ -361,6 +366,10 @@ export const scanTicket = async (adminId, qrCodeToken) => {
 
         if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(admin.role)) {
             throw new AppError("Unauthorized: You do not have permission to scan tickets", 401);
+        }
+
+        if (!qrCodeToken) {
+            throw new AppError("QR code is required", 400);
         }
 
         const ticket = await prisma.$transaction(async (tx) => {
