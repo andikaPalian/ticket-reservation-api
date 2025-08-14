@@ -315,7 +315,7 @@ export const updateTicketStatus = async (adminId, ticketId, status) => {
             throw new AppError("Admin not found", 404);
         }
 
-        if (!["SUPER_ADMIN"].includes(admin.role)) {
+        if (!["SUPER_ADMIN", "THEATER_ADMIN"].includes(admin.role)) {
             throw new AppError("Unauthorized: You do not have permission to update tickets", 401);
         }
 
