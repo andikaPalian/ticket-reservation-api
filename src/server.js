@@ -14,11 +14,13 @@ import './cron/cancelUnpaidTicket.js';
 import './cron/ticketsCleanUp.js';
 import { ticketRouter } from './routes/ticket.routes.js';
 import { paymentRouter } from './routes/payment.routes.js';
+import { globalRateLimiter } from './middlewares/rateLimiter.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
 connectCloudinary();
 
+app.use(globalRateLimiter);
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
