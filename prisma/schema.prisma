@@ -177,6 +177,13 @@ model Tickets {
   @@index([qrCodeToken, status])
 }
 
+model StripeEvent {
+  eventId   String @id
+  type      String
+  payload   Json
+  createdAt DateTime  @default(now())
+}
+
 // model Stripe {
 //   stripeId           String       @id @default(uuid())
 //   customerID         String       @unique
