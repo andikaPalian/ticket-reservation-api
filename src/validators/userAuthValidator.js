@@ -11,12 +11,12 @@ export const registerUserSchema = z.object({
     email: z.string().email().trim(),
     password: z.string().regex(passwordRegex, {
         message: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character"
-    }).trim()
+    })
 });
 
 export const loginUserSchema = z.object({
     email: z.string().email().trim(),
     password: z.string().regex(passwordRegex, {
         message: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character"
-    }).trim()
+    })
 });
