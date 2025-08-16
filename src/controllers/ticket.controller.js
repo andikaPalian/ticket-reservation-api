@@ -59,7 +59,7 @@ export const getAllTicketsController = async (req, res, next) => {
             }
         });
     } catch (error) {
-        next(error);
+        next(error);    
     }
 };
 
