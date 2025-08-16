@@ -1,24 +1,20 @@
-import { ZodError } from "zod";
+// import { ZodError } from "zod";
 
 export const validateBody = (schema) => (req, res, next) => {
-    try {
-        // const parsed = schema.parse(req.body);
-        // req.body = parsed;
-        schema.parse(req.body);
-        next();
-    } catch (error) {
-        if (error instanceof ZodError) {
-            const errors = error.errors.map((err) => ({
-                field: err.path.join("."),
+    const result = schema.safeParse(req.body);
+    
+    if (!result.success) {
+        return res.status(400).json({
+            success: false,
+            message: "Validation failed",
+            errors: result.error.issues.map((err) => ({
+                path: err.path.join('.'),
                 message: err.message
-            }));
-            return res.status(400).json({
-                sucess: false,
-                message: "Validation failed",
-                error: errors
-            });
-        }
-
-        next(error);
+            }))
+        });
     }
+
+    req.body = result.data;
+
+    next();
 };
