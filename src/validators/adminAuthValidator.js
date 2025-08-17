@@ -11,7 +11,7 @@ export const registerAdminSchema = z.object({
     password: z.string().regex(passwordRegex, {
         message: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character"
     }),
-    role: z.enum(["SUPER_ADMIN", "THEATHER_ADMIN", "ADMIN"]).default("ADMIN")
+    role: z.enum(["SUPER_ADMIN", "THEATER_ADMIN", "ADMIN"]).default("ADMIN")
 });
 
 export const loginAdminSchema = z.object({
@@ -26,5 +26,5 @@ export const loginAdminSchema = z.object({
 });
 
 export const changeAdminRoleSchema = z.object({
-    role: z.enum(["THEATHER_ADMIN", "ADMIN"]).default("ADMIN")
+    role: z.enum(["THEATER_ADMIN", "ADMIN"]).default("ADMIN")
 });
