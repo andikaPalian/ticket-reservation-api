@@ -126,7 +126,7 @@ model Movies {
   posterPublicId    String?
   trailerUrl        String?
   trailerPublicId   String?
-  genre             Genre
+  genre             Genre[]
   language          String
   rating            String
   director          String?
