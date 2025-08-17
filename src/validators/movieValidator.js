@@ -11,7 +11,7 @@ export const movieAddSchema = z.object({
     }).max(1000, {
         message: "Description must be at most 1000 characters long"
     }).trim(),
-    duration: z.number().min(1, {
+    duration: z.coerce.number().min(1, {
         message: "Duration must be at least 1 minute long"
     }).max(300, {
         message: "Duration must be at most 300 minutes long"
@@ -25,18 +25,36 @@ export const movieAddSchema = z.object({
     }, z.date().refine((date) => date > new Date(), {
         message: "Release date must be in the future"
     })),
-    genre: z.array(z.enum(["ACTION", "COMEDY", "DRAMA", "THRILLER", "ROMANCE", "SCIFI", "HORROR", "DOCUMENTARY", "FAMILY", "ANIMATION", "FANTASY"])).min(1, {
-        message: "At least one genre must be selected"
-    }),
-    languange: z.string().min(1, {
+    genre: z.preprocess((gen) => {
+        if (typeof gen === 'string') {
+            try {
+                return JSON.parse(gen);
+            } catch (error) {
+                return gen
+            }
+        }
+        return gen
+    }, z.array(z.enum([
+        "ACTION", "COMEDY", "DRAMA", "THRILLER", "ROMANCE", "SCIFI", "HORROR", "DOCUMENTARY", "FAMILY", "ANIMATION", "FANTASY"
+    ]))),
+    language: z.string().min(1, {
         message: "Languange must be at least 1 character long"
     }),
     rating: z.string().min(1, {
         message: "Rating is required"
     }),
     director: z.string().optional(),
-    isPublished: z.boolean().default(false).optional(),
-    cast: z.array(
+    isPublished: z.coerce.boolean().default(false).optional(),
+    cast: z.preprocess((cas) => {
+        if (typeof cas === 'string') {
+            try {
+                return JSON.parse(cas);
+            } catch (error) {
+                return cas
+            }
+        }
+        return cas
+    }, z.array(
         z.object({
             name: z.string().min(1, {
                 message: "Cast name must be at least 1 character long"
@@ -47,7 +65,7 @@ export const movieAddSchema = z.object({
                 message: "Cast role must be at most 100 characters long"
             }).optional()
         })
-    )
+    ))
 });
 
 export const movieUpdateSchema = movieAddSchema.partial();
