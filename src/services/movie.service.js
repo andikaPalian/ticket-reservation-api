@@ -28,29 +28,29 @@ export const addMovie = async (adminId, files, movieData) => {
         let trailerUrl = null;
         let trailerPublicId = null;
 
-        if (files.poster) {
-            const result = await cloudinary.uploader.upload(files.path, {
+        if (files.posters && files.posters[0]) {
+            const result = await cloudinary.uploader.upload(files.posters[0].path, {
                 folder: 'posters',
                 resource_type: 'image',
                 use_filename: true,
                 unique_filename: true
             });
 
-            await fs.unlink(files.path);
+            await fs.unlink(files.posters[0].path);
 
             posterUrl = result.secure_url;
             posterPublicId = result.public_id;
         }
 
-        if (files.trailer) {
-            const result = await cloudinary.uploader.upload(files.path, {
+        if (files.trailers && files.trailers[0]) {
+            const result = await cloudinary.uploader.upload(files.trailers[0].path, {
                 folder: 'trailers',
                 resource_type: 'video',
                 use_filename: true,
                 unique_filename: true
             });
 
-            await fs.unlink(files.path);
+            await fs.unlink(files.trailers[0].path);
 
             trailerUrl = result.secure_url;
             trailerPublicId = result.public_id;
@@ -109,6 +109,8 @@ export const addMovie = async (adminId, files, movieData) => {
                     data: castData
                 });
             }
+
+            return movie;
         });
 
         return newMovie;

@@ -4,7 +4,7 @@ export const addMovieController = async (req, res, next) => {
     try {
         const adminId = req.admin.adminId;
 
-        const newMovie = await addMovie(adminId, req.file, req.body);
+        const newMovie = await addMovie(adminId, req.files, req.body);
 
         return res.status(201).json({
             success: true,
