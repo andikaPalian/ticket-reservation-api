@@ -133,6 +133,7 @@ model Movies {
   cast              Cast[]
   isPublished       Boolean         @default(false)
   schedules         MovieSchedules[]
+  createdAt         DateTime        @default(now())
   // theaters          Theaters[]
 }
 
