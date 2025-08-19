@@ -143,7 +143,22 @@ export const getAllMovies = async ({page = 1, limit = 10, search = ''}) => {
             },
         });
 
-        return movies;
+        const totalMovies = await prisma.movies.count({
+            where: {
+                title: {
+                    contains: search || '',
+                    mode: 'insensitive'
+                }
+            }
+        });
+
+        return {
+            movies: movies,
+            totalMovies: totalMovies,
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(totalMovies / limitNum)
+        };
     } catch (error) {
         console.error("Movies fetching error: ", error);
         throw error;
