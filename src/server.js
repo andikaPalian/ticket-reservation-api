@@ -15,6 +15,7 @@ import './cron/ticketsCleanUp.js';
 import { ticketRouter } from './routes/ticket.routes.js';
 import { paymentRouter } from './routes/payment.routes.js';
 import { globalRateLimiter } from './middlewares/rateLimiter.js';
+import { theaterAdminRouter } from './routes/theaterAdmin.routes.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -33,6 +34,7 @@ app.use('/api/theaters', theaterRouter);
 app.use('/api/chedules', movieScheduleRouter);
 app.use('/api/tickets', ticketRouter);
 app.use('/api/payment', paymentRouter);
+app.use('/api/theaterAdmin', theaterAdminRouter);
 
 // Handle multer errors
 app.use((err, req, res, next) => {
