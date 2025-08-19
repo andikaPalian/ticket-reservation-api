@@ -14,7 +14,7 @@ export const addTheater = async (adminId, theaterData) => {
             throw new AppError("Theater admin not found", 404);
         }
 
-        if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(theaterAdmin.role)) {
+        if (!["SUPER_ADMIN"].includes(theaterAdmin.role)) {
             throw new AppError("Unauthorized: You do not have permission to add theaters", 401);
         }
 
@@ -106,7 +106,7 @@ export const updateTheater = async (adminId, theaterId, theaterData) => {
             throw new AppError("Theater admin not found", 404);
         }
 
-        if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(theaterAdmin.role)) {
+        if (!["SUPER_ADMIN"].includes(theaterAdmin.role)) {
             throw new AppError("Unauthorized: You do not have permission to update theaters", 401);
         }
 
@@ -148,7 +148,7 @@ export const deleteTheater = async (adminId, theaterId) => {
             throw new AppError("Theater admin not found", 404);
         }
 
-        if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(theaterAdmin.role)) {
+        if (!["SUPER_ADMIN"].includes(theaterAdmin.role)) {
             throw new AppError("Unauthorized: You do not have permission to delete theaters", 401);
         }
 

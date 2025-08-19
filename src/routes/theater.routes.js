@@ -7,11 +7,11 @@ import { addTheaterController, createTheaterScreenController, deleteScreenContro
 export const theaterRouter = express.Router();
 
 // Theaters
-theaterRouter.post('/add-theater', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), validateBody(theaterAddSchema), addTheaterController);
+theaterRouter.post('/add-theater', adminAuth, roleCheck(["SUPER_ADMIN"]), validateBody(theaterAddSchema), addTheaterController);
 theaterRouter.get('/', getAllTheatersController);
 theaterRouter.get('/:theaterId', getTheaterByIdController);
-theaterRouter.patch('/:theaterId/update', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), validateBody(theaterUpdateSchema), updateTheaterController);
-theaterRouter.delete('/:theaterId/delete', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), deleteTheaterController);
+theaterRouter.patch('/:theaterId/update', adminAuth, roleCheck(["SUPER_ADMIN"]), validateBody(theaterUpdateSchema), updateTheaterController);
+theaterRouter.delete('/:theaterId/delete', adminAuth, roleCheck(["SUPER_ADMIN"]), deleteTheaterController);
 
 // Screens
 theaterRouter.post('/:theaterId/screens/add-screen', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), validateBody(theaterScreenCreateSchema), createTheaterScreenController);
