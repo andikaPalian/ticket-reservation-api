@@ -7,16 +7,16 @@ const prisma = new PrismaClient();
 
 export const addMovie = async (adminId, files, movieData) => {
     try {
-        const theaterAdmin = await prisma.admin.findUnique({
+        const superAdmin = await prisma.admin.findUnique({
             where: {
                 adminId: adminId
             }
         });
-        if (!theaterAdmin) {
+        if (!superAdmin) {
             throw new AppError("Theater admin not found", 404);
         }
 
-        if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(theaterAdmin.role)) {
+        if (superAdmin.role !== "SUPER_ADMIN") {
             throw new AppError("Unauthorized: You do not have permission to add movies", 401);
         }
 
@@ -185,16 +185,16 @@ export const getMovieById = async (movieId) => {
 
 export const updateMovie = async (adminId, movieId, files, movieData) => {
     try {
-        const theaterAdmin = await prisma.admin.findUnique({
+        const superAdmin = await prisma.admin.findUnique({
             where: {
                 adminId: adminId
             }
         });
-        if (!theaterAdmin) {
+        if (!superAdmin) {
             throw new AppError("Theater admin not found", 404);
         }
 
-        if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(theaterAdmin.role)) {
+        if (superAdmin.role !== "SUPER_ADMIN") {
             throw new AppError("Unauthorized: You do not have permission to update movies", 401);
         }
 
@@ -318,16 +318,16 @@ export const updateMovie = async (adminId, movieId, files, movieData) => {
 
 export const deleteMovie = async (adminId, movieId) => {
     try {
-        const theaterAdmin = await prisma.admin.findUnique({
+        const superAdmin = await prisma.admin.findUnique({
             where: {
                 adminId: adminId
             }
         });
-        if (!theaterAdmin) {
+        if (!superAdmin) {
             throw new AppError("Theater admin not found", 404);
         }
 
-        if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(theaterAdmin.role)) {
+        if (superAdmin.role !== "SUPER_ADMIN") {
             throw new AppError("Unauthorized: You do not have permission to delete movies", 401);
         }
 

@@ -7,14 +7,14 @@ import { upload } from "../middlewares/multer.js";
 
 export const movieRouter = express.Router();
 
-movieRouter.post('/add-movie', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), upload.fields([
+movieRouter.post('/add-movie', adminAuth, roleCheck(["SUPER_ADMIN"]), upload.fields([
     {name: 'posters', maxCount: 1},
     {name: 'trailers', maxCount: 1}
 ]), validateBody(movieAddSchema), addMovieController);
 movieRouter.get('/', getAllMoviesController);
 movieRouter.get('/:movieId', getMovieByIdController);
-movieRouter.patch('/:movieId/update', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), upload.fields([
+movieRouter.patch('/:movieId/update', adminAuth, roleCheck(["SUPER_ADMIN"]), upload.fields([
     {name: 'posters', maxCount: 1},
     {name: 'trailers', maxCount: 1}
 ]), validateBody(movieUpdateSchema), updateMovieController);
-movieRouter.delete('/:movieId', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), deleteMovieController);
+movieRouter.delete('/:movieId', adminAuth, roleCheck(["SUPER_ADMIN"]), deleteMovieController);
