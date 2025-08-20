@@ -156,18 +156,63 @@ export const getAllTickets = async (adminId) => {
         }
 
         if (!["SUPER_ADMIN", "THEATER_ADMIN"].includes(admin.role)) {
-            throw new AppError("Unauthorized: You do not have permission to view tickets", 401);
+            throw new AppError("Unauthorized: You do not have permission to view tickets", 403);
         }
 
-        const tickets = await prisma.tickets.findMany({
-            include: {
-                user: true,
-                schedule: true,
-                seat: true
-            }
-        });
+        // Super admin can view all tickets
+        if (admin.role === "SUPER_ADMIN") {
+            const tickets = await prisma.tickets.findMany({
+                include: {
+                    user: true,
+                    schedule: {
+                        include: {
+                            movie: true,
+                            screen: {
+                                include: {
+                                    theater: true
+                                }
+                            }
+                        }
+                    },
+                    seat: true
+                }
+            });
 
-        return tickets;
+            return tickets;
+            // Theater admin can view tickets for their theaters
+        } else if (admin.role === "THEATER_ADMIN") {
+            const tickets = await prisma.tickets.findMany({
+                where: {
+                    schedule: {
+                        screen: {
+                            theater: {
+                                admin: {
+                                    some: {
+                                        adminId: adminId
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                include: {
+                    user: true,
+                    schedule: {
+                        include: {
+                            movie: true,
+                            screen: {
+                                include: {
+                                    theater: true
+                                }
+                            }
+                        }
+                    },
+                    seat: true
+                }
+            });
+
+            return tickets;
+        }
     } catch (error) {
         console.error("Error getting tickets: ", error);
         throw error;
@@ -186,7 +231,7 @@ export const getTicketById = async (adminId, ticketId) => {
         }
 
         if (!["SUPER_ADMIN", "THEATER_ADMIN"].includes(admin.role)) {
-            throw new AppError("Unauthorized: You do not have permission to view tickets", 401);
+            throw new AppError("Unauthorized: You do not have permission to view tickets", 403);
         }
 
         const ticket = await prisma.tickets.findUnique({
@@ -195,10 +240,34 @@ export const getTicketById = async (adminId, ticketId) => {
             },
             include: {
                 user: true,
-                schedule: true,
+                schedule: {
+                    include: {
+                        movie: true,
+                        screen: {
+                            include: {
+                                theater: {
+                                    include: {
+                                        admin: {
+                                            select: {
+                                                adminId: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 seat: true
             }
         });
+
+        if (admin.role === "THEATER_ADMIN") {
+            const isTheaterAdmin = ticket.schedule.screen.theater.admin.some((admin) => admin.adminId === adminId);
+            if (!isTheaterAdmin) {
+                throw new AppError("Unauthorized: You do not have permission to view this ticket", 403);
+            }
+        }
 
         return ticket;
     } catch (error) {
@@ -316,7 +385,42 @@ export const updateTicketStatus = async (adminId, ticketId, status) => {
         }
 
         if (!["SUPER_ADMIN", "THEATER_ADMIN"].includes(admin.role)) {
-            throw new AppError("Unauthorized: You do not have permission to update tickets", 401);
+            throw new AppError("Unauthorized: You do not have permission to update tickets", 403);
+        }
+
+        if (admin.role === "THEATER_ADMIN") {
+            const ticket = await prisma.tickets.findUnique({
+                where: {
+                    ticketId: ticketId
+                },
+                include: {
+                    schedule: {
+                        include: {
+                            screen: {
+                                include: {
+                                    theater: {
+                                        include: {
+                                            admin: {
+                                                select: {
+                                                    adminId: true
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            if (!ticket) {
+                throw new AppError("Ticket not found", 404);
+            }
+
+            const isTheaterAdmin = ticket.schedule.screen.theater.admin.some((admin) => admin.adminId === adminId);
+            if (!isTheaterAdmin) {
+                throw new AppError("Unauthorized: You do not have permission to update this ticket", 403);
+            }
         }
 
         const ticket = await prisma.tickets.findUnique({
@@ -361,7 +465,42 @@ export const scanTicket = async (adminId, qrCodeToken) => {
         }
 
         if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(admin.role)) {
-            throw new AppError("Unauthorized: You do not have permission to scan tickets", 401);
+            throw new AppError("Unauthorized: You do not have permission to scan tickets", 403);
+        }
+
+        if (admin.role === "THEATER_ADMIN") {
+            const ticket = await prisma.tickets.findUnique({
+                where: {
+                    qrCodeToken: qrCodeToken
+                },
+                include: {
+                    schedule: {
+                        include: {
+                            screen: {
+                                include: {
+                                    theater: {
+                                        include: {
+                                            admin: {
+                                                select: {
+                                                    adminId: true
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            if (!ticket) {
+                throw new AppError("Ticket not found", 404);
+            }
+
+            const isTheaterAdmin = ticket.schedule.screen.theater.admin.some((admin) => admin.adminId === adminId);
+            if (!isTheaterAdmin) {
+                throw new AppError("Unauthorized: You do not have permission to scan this ticket", 403);
+            }
         }
 
         if (!qrCodeToken) {
