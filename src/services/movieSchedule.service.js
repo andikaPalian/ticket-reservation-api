@@ -3,7 +3,7 @@ import { AppError } from "../utils/errorHandler.js";
 
 const prisma = new PrismaClient();
 
-export const createMovieSchedule = async (adminId, scheduleData) => {
+export const createMovieSchedule = async (adminId, screenId, scheduleData) => {
     try {
         const theaterAdmin = await prisma.admin.findUnique({
             where: {
@@ -15,10 +15,37 @@ export const createMovieSchedule = async (adminId, scheduleData) => {
         }
 
         if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(theaterAdmin.role)) {
-            throw new AppError("Unauthorized: You do not have permission to add theaters", 401);
+            throw new AppError("Unauthorized: You do not have permission to add schedules", 403);
         }
 
-        const {movieId, screenId, startTime, endTime} = scheduleData;
+        if (theaterAdmin.role === "THEATER_ADMIN") {
+            const screen = await prisma.screens.findUnique({
+                where: {
+                    screenId: screenId
+                },
+                include: {
+                    theater: {
+                        include: {
+                            admin: {
+                                select: {
+                                    adminId: true
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            if (!screen) {
+                throw new AppError("Screen not found", 404);
+            }
+
+            const isTheaterAdmin = screen.theater.admin.some((admin) => admin.adminId === adminId);
+            if (!isTheaterAdmin) {
+                throw new AppError("Unauthorized: You do not have permission to add schedules to this screen", 403);
+            }
+        }
+
+        const {movieId, startTime, endTime} = scheduleData;
 
         if (new Date(startTime) >= new Date(endTime)) {
             throw new AppError("Start time must be before end time", 400);

@@ -5,7 +5,7 @@ import { createMovieScheduleController, deleteScheduleController, findAvailableS
 
 export const movieScheduleRouter = express.Router();
 
-movieScheduleRouter.post('/create-schedule', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), createMovieScheduleController);
+movieScheduleRouter.post('/:screenId/create-schedule', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), createMovieScheduleController);
 movieScheduleRouter.get('/', getAllSchedulesController);
 movieScheduleRouter.get('/:scheduleId', getScheduleByIdController);
 movieScheduleRouter.get('/schedule/:movieId', getScheduleByMovieController);
