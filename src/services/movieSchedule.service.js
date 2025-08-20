@@ -232,7 +232,30 @@ export const findAvailableScreen = async (adminId, theaterId) => {
         }
 
         if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(theaterAdmin.role)) {
-            throw new AppError("Unauthorized: You do not have permission to add theaters", 401);
+            throw new AppError("Unauthorized: You do not have permission to add theaters", 403);
+        }
+
+        if (theaterAdmin.role === "THEATER_ADMIN") {
+            const theater = await prisma.theaters.findUnique({
+                where: {
+                    theaterId: theaterId
+                },
+                include: {
+                    admin: {
+                        select: {
+                            adminId: true
+                        }
+                    }
+                }
+            });
+            if (!theater) {
+                throw new AppError("Theater not found", 404);
+            }
+
+            const isTheaterAdmin = theater.admin.some((admin) => admin.adminId === adminId);
+            if (!isTheaterAdmin) {
+                throw new AppError("Unauthorized: You do not have permission to add theaters", 403);
+            }
         }
 
         // Count seats stats
