@@ -109,3 +109,65 @@ export const changeRole = async (adminId, targetAdminId, {role}) => {
         throw error;
     }
 };
+
+export const deleteAdmin = async (adminId, targetAdminId) => {
+    try {
+        const superAdmin = await prisma.admin.findUnique({
+            where: {
+                adminId: adminId
+            }
+        });
+        if (!superAdmin) {
+            throw new AppError("Super admin not found", 404);
+        }
+
+        if (superAdmin.role !== "SUPER_ADMIN") {
+            throw new AppError("Unauthorized: You do not have permission to delete admins", 401);
+        }
+
+        const targetAdmin = await prisma.admin.findUnique({
+            where: {
+                adminId: targetAdminId
+            },
+            include: {
+                theater: true
+            }
+        });
+        if (!targetAdmin) {
+            throw new AppError("Target admin not found", 404);
+        }
+
+        if (superAdmin.adminId === targetAdmin.adminId) {
+            throw new AppError("Cannot delete yourself", 400);
+        }
+
+        if (targetAdmin.role === "SUPER_ADMIN") {
+            throw new AppError("Cannot delete super admin", 400);
+        }
+
+        // Disconnect target admin from theaters
+        if (targetAdmin.theater.length > 0) {
+            await prisma.admin.update({
+                where: {
+                    adminId: targetAdminId
+                },
+                data: {
+                    theater: {
+                        disconnect: targetAdmin.theater.map((theater) => ({
+                            theaterId: theater.theaterId
+                        }))
+                    }
+                }
+            });
+        }
+
+        await prisma.admin.delete({
+            where: {
+                adminId: targetAdminId
+            }
+        });
+    } catch (error) {
+        console.error("Admin deletion error: ", error);
+        throw error;
+    }
+};

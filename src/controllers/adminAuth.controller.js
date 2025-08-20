@@ -1,4 +1,4 @@
-import { adminRegister, adminLogin, changeRole } from "../services/adminAuth.service.js";
+import { adminRegister, adminLogin, changeRole, deleteAdmin } from "../services/adminAuth.service.js";
 
 export const adminRegisterController = async (req, res, next) => {
     try {
@@ -47,6 +47,22 @@ export const changeRoleController = async (req, res, next) => {
             data: {
                 admin: updatedAdmin
             }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteAdminController = async (req, res, next) => {
+    try {
+        const adminId = req.admin.adminId;
+        const {targetAdminId} = req.params;
+
+        await deleteAdmin(adminId, targetAdminId);
+
+        return res.status(200).json({
+            success: true,
+            message: "Admin deleted successfully"
         });
     } catch (error) {
         next(error);
