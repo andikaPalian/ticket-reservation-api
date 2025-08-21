@@ -83,7 +83,7 @@ model Theaters {
   latitude          Float?
   longitude         Float?
   // location          String
-  theaterCapacity   Int
+  theaterCapacity   Int?  @default(0)
   phone             String?
   email             String?
   createdAt         DateTime  @default(now())
