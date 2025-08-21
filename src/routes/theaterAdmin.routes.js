@@ -4,5 +4,5 @@ import { assignAdminToTheaterController, removeAdminFromTheaterController } from
 
 export const theaterAdminRouter = express.Router();
 
-theaterAdminRouter.post('/theaterId/assign-admin', adminAuth, roleCheck(["SUPER_ADMIN"]), assignAdminToTheaterController);
+theaterAdminRouter.post('/:theaterId/assign-admin', adminAuth, roleCheck(["SUPER_ADMIN"]), assignAdminToTheaterController);
 theaterAdminRouter.delete('/:theaterId/remove/:adminId', adminAuth, roleCheck(["SUPER_ADMIN"]), removeAdminFromTheaterController);
