@@ -157,7 +157,8 @@ export const deleteTheater = async (adminId, theaterId) => {
                 theaterId: theaterId
             },
             include: {
-                screens: true
+                screens: true,
+                admin: true
             }
         });
         if (!theater) {
@@ -168,6 +169,20 @@ export const deleteTheater = async (adminId, theaterId) => {
             await prisma.screens.deleteMany({
                 where: {
                     theaterId: theaterId
+                }
+            });
+        }
+
+        // If the theater has any admins, remove them/disconnect
+        if (theater.admin.length > 0) {
+            await prisma.theaters.update({
+                where: {
+                    theaterId: theaterId
+                },
+                data: {
+                    admin: {
+                        set: []
+                    }
                 }
             });
         }
