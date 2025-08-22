@@ -209,107 +209,109 @@ export const updateMovie = async (adminId, movieId, files, movieData) => {
 
         const { title, description, duration, releaseDate, genre, language, rating, director, cast, isPublished } = movieData;
 
+        const updateData = {}
+
         // Cloudinary
         let posterUrl = existingMovie.posterUrl;
         let posterPublicId = existingMovie.posterPublicId;
         let trailerUrl = existingMovie.trailerUrl;
         let trailerPublicId = existingMovie.trailerPublicId;
 
-        if (files?.poster) {
+        if (files?.posters && files?.posters[0]) {
             if (existingMovie.posterPublicId) {
                 await cloudinary.uploader.destroy(existingMovie.posterPublicId);
             }
 
-            const result = await cloudinary.uploader.upload(files.path, {
+            const result = await cloudinary.uploader.upload(files.posters[0].path, {
                 folder: 'posters',
                 resource_type: 'image',
                 use_filename: true,
                 unique_filename: true
             });
 
-            await fs.unlink(files.path);
+            await fs.unlink(files.posters[0].path);
 
             posterUrl = result.secure_url;
             posterPublicId = result.public_id;
+
+            updateData.posterUrl = posterUrl;
+            updateData.posterPublicId = posterPublicId;
         }
 
-        if (files?.trailer) {
+        if (files?.trailers && files?.trailers[0]) {
             if (existingMovie.trailerPublicId) {
                 await cloudinary.uploader.destroy(existingMovie.trailerPublicId);
             }
 
-            const result = await cloudinary.uploader.upload(files.path, {
+            const result = await cloudinary.uploader.upload(files.trailers[0].path, {
                 folder: 'trailers',
                 resource_type: 'video',
                 use_filename: true,
                 unique_filename: true
             });
 
-            await fs.unlink(files.path);
+            await fs.unlink(files.trailers[0].path);
 
             trailerUrl = result.secure_url;
             trailerPublicId = result.public_id;
+
+            updateData.trailerUrl = trailerUrl;
+            updateData.trailerPublicId = trailerPublicId;
         }
 
-        // const updateData = {}
-
-        // if (title !== undefined) updateData.title = title;
-        // if (description !== undefined) updateData.description = description;
-        // if (duration !== undefined) updateData.duration = Number(duration);
-        // if (releaseDate !== undefined) updateData.releaseDate = new Date(releaseDate);
-        // if (genre !== undefined) updateData.genre = genre;
-        // if (language !== undefined) updateData.language = language;
-        // if (rating !== undefined) updateData.rating = rating;
-        // if (director !== undefined) updateData.director = director;
-        // if (cast !== undefined) {
-        // if (Array.isArray(cast)) {
-        //     updateData.cast = cast;
-        // } else if (typeof cast === 'string') {
-        //     updateData.cast = cast.split(',').map(c => c.trim());
-        //     }
-        // }
-        // if (isPublished !== undefined) updateData.isPublished = isPublished === 'true' || isPublished === true;
-
-        const updaedMovie = await prisma.$transaction(async (prism) => {
-            const movie = await prism.movies.update({
+        if (title !== undefined) updateData.title = title;
+        if (description !== undefined) updateData.description = description;
+        if (duration !== undefined) updateData.duration = Number(duration);
+        if (releaseDate !== undefined) updateData.releaseDate = new Date(releaseDate);
+        if (genre !== undefined) {
+            if (Array.isArray(genre)) {
+                updateData.genre = genre.filter((g) => g !== undefined && g !== null);
+            } else {
+                updateData.genre = [genre]
+            }
+        }
+        if (language !== undefined) updateData.language = language;
+        if (rating !== undefined) updateData.rating = rating;
+        if (director !== undefined) updateData.director = director;
+        if (cast !== undefined) {
+            // Delete existing casts
+            await prisma.cast.deleteMany({
                 where: {
                     movieId: movieId
-                },
-                data: {
-                    title: title,
-                    description: description,
-                    duration: Number(duration),
-                    releaseDate: new Date(releaseDate),
-                    posterUrl: posterUrl,
-                    posterPublicId: posterPublicId,
-                    trailerUrl: trailerUrl,
-                    trailerPublicId: trailerPublicId,
-                    genre: genre,
-                    language: language,
-                    rating: rating,
-                    director: director,
-                    isPublished: isPublished === 'true' || isPublished === true
                 }
             });
 
+            // Add new casts
             if (Array.isArray(cast)) {
-                await prism.cast.deleteMany({
-                    where: {
-                        movieId: movieId
-                    }
-                });
+                const newCast = cast.map((c) => ({
+                    name: c.name,
+                    role: c.role,
+                    movieId: existingMovie.movieId
+                }));
 
-                await prism.cast.createMany({
-                    data: cast.map((c) => ({
-                        name: c.name,
-                        role: c.role,
-                        movieId: movie.movieId
-                    }))
+                await prisma.cast.createMany({
+                    data: newCast
                 });
+            }
+        }
+        if (isPublished !== undefined) updateData.isPublished = isPublished === 'true' || isPublished === true;
+
+        // updateData.posterUrl = posterUrl;
+        // updateData.posterPublicId = posterPublicId;
+        // updateData.trailerUrl = trailerUrl;
+        // updateData.trailerPublicId = trailerPublicId;
+
+        const updatedMovie = await prisma.movies.update({
+            where: {
+                movieId: movieId
+            },
+            data: updateData,
+            include: {
+                cast: true
             }
         });
 
-        return updaedMovie;
+        return updatedMovie;
     } catch (error) {
         console.error("Movie update error: ", error);
         throw error;

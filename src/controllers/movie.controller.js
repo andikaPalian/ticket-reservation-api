@@ -67,7 +67,7 @@ export const updateMovieController = async (req, res, next) => {
         const adminId = req.admin.adminId;
         const {movieId} = req.params;
 
-        const updatedMovie = await updateMovie(adminId, movieId, req.file, req.body);
+        const updatedMovie = await updateMovie(adminId, movieId, req.files, req.body);
 
         return res.status(200).json({
             success: true,
