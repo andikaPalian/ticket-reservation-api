@@ -8,8 +8,8 @@ export const theaterRouter = express.Router();
 
 // Theaters
 theaterRouter.post('/add-theater', adminAuth, roleCheck(["SUPER_ADMIN"]), validateBody(theaterAddSchema), addTheaterController);
-theaterRouter.get('/', getAllTheatersController);
-theaterRouter.get('/:theaterId', getTheaterByIdController);
+theaterRouter.get('/', adminAuth, roleCheck(["SUPER_ADMIN"]), getAllTheatersController);
+theaterRouter.get('/:theaterId', adminAuth, roleCheck(["SUPER_ADMIN"]), getTheaterByIdController);
 theaterRouter.patch('/:theaterId/update', adminAuth, roleCheck(["SUPER_ADMIN"]), validateBody(theaterUpdateSchema), updateTheaterController);
 theaterRouter.delete('/:theaterId/delete', adminAuth, roleCheck(["SUPER_ADMIN"]), deleteTheaterController);
 

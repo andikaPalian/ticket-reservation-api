@@ -20,7 +20,9 @@ export const addTheaterController = async (req, res, next) => {
 
 export const getAllTheatersController = async (req, res, next) => {
     try {
-        const theaters = await getAllTheaters(req.query);
+        const adminId = req.admin.adminId;
+
+        const theaters = await getAllTheaters(adminId, req.query);
 
         if (theaters.length === 0) {
             return res.status(200).json({
@@ -46,9 +48,10 @@ export const getAllTheatersController = async (req, res, next) => {
 
 export const getTheaterByIdController = async (req, res, next) => {
     try {
+        const adminId = req.admin.adminId;
         const {theaterId} = req.params;
 
-        const theater = await getTheaterById(theaterId);
+        const theater = await getTheaterById(adminId, theaterId);
 
         return res.status(200).json({
             success: true,
