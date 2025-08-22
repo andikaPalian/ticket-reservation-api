@@ -343,12 +343,12 @@ export const deleteMovie = async (adminId, movieId) => {
         }
 
         await prisma.$transaction(async (prism) => {
-            await prism.movies.delete({
+            await prism.cast.deleteMany({
                 where: {
                     movieId: movieId
                 }
             });
-
+            
             if (movie.posterPublicId) {
                 await cloudinary.uploader.destroy(movie.posterPublicId);
             }
@@ -357,15 +357,15 @@ export const deleteMovie = async (adminId, movieId) => {
                 await cloudinary.uploader.destroy(movie.trailerPublicId);
             }
 
-            await prism.cast.deleteMany({
+            await prism.movieSchedules.deleteMany({
                 where: {
                     movieId: movieId
                 }
             });
 
-            await prism.movieSchedules.deleteMany({
+            await prism.movies.delete({
                 where: {
-                    movieID: movieId
+                    movieId: movieId
                 }
             });
         });
