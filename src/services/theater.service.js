@@ -254,20 +254,23 @@ export const createTheaterScreen = async (adminId, theaterId, screenData, seatsD
             throw new AppError("Unauthorized: You do not have permission to create screens", 401);
         }
 
-        if (theaterAdmin.role === "THEATER_ADMIN") {
-            const theater = await prisma.theaters.findUnique({
-                where: {
-                    theaterId: theaterId
-                },
-                include: {
-                    admin: {
-                        select: {
-                            adminId: true
-                        }
+        const theater = await prisma.theaters.findUnique({
+            where: {
+                theaterId: theaterId
+            },
+            include: {
+                admin: {
+                    select: {
+                        adminId: true
                     }
                 }
-            });
+            }
+        });
+        if (!theater) {
+            throw new AppError("Theater not found", 404);
+        }
 
+        if (theaterAdmin.role === "THEATER_ADMIN") {
             const isTheaterAdmin = theater.admin.some((admin) => admin.adminId === adminId);
             if (!isTheaterAdmin) {
                 throw new AppError("Unauthorized: You do not have permission to create screens", 401);
@@ -282,7 +285,8 @@ export const createTheaterScreen = async (adminId, theaterId, screenData, seatsD
             const screen = await prism.screens.create({
                 data: {
                     name: name,
-                    theaterId: theaterId
+                    theaterId: theaterId,
+                    screenCapacity: totalRows * seatsPerRows
                 }
             });
 
@@ -291,7 +295,7 @@ export const createTheaterScreen = async (adminId, theaterId, screenData, seatsD
             const rowLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             for (let i = 0; i < totalRows; i++) {
                 const row = rowLetters[i];
-                for (let j = 1; j < seatsPerRows; j++) {
+                for (let j = 1; j <= seatsPerRows; j++) {
                     const seatNumber = j.toString();
 
                     // Check if custom seat exists
@@ -313,7 +317,7 @@ export const createTheaterScreen = async (adminId, theaterId, screenData, seatsD
             }
 
             // Insert seats
-            await prisma.seats.createMany({
+            await prism.seats.createMany({
                 data: seats
             });
 
@@ -337,7 +341,16 @@ export const createTheaterScreen = async (adminId, theaterId, screenData, seatsD
                 }
             });
 
-            return screen;
+            const screenWithSeats = await prism.screens.findUnique({
+                where: {
+                    screenId: screen.screenId
+                },
+                include: {
+                    seats: true
+                }
+            });
+
+            return screenWithSeats;
         });
 
         return newScreen;
