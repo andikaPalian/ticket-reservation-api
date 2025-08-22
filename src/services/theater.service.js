@@ -54,10 +54,6 @@ export const getAllTheaters = async ({page = 1, limit = 10, search = ''}) => {
                 name: {
                     contains: search || '',
                     mode: 'insensitive'
-                },
-                location: {
-                    contains: search || '',
-                    mode: 'insensitive'
                 }
             },
             include: {
