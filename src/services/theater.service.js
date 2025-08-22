@@ -79,7 +79,22 @@ export const getAllTheaters = async (adminId, {page = 1, limit = 10, search = ''
             },
         });
 
-        return theaters;
+        const total = await prisma.theaters.count({
+            where: {
+                name: {
+                    contains: search || '',
+                    mode: 'insensitive'
+                }
+            }
+        });
+
+        return {
+            thaaters: theaters,
+            total: total,
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(total / limitNum)
+        };
     } catch (error) {
         console.error("Theaters fetching error: ", error);
         throw error;
