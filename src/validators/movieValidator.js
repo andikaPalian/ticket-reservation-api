@@ -17,15 +17,17 @@ export const movieAddSchema = z.object({
         message: "Duration must be at most 300 minutes long"
     }),
     releaseDate: z.preprocess((date) => {
+        if (date === undefined) return undefined;
         if (typeof date === 'string' || date instanceof Date) {
             const parsedDate = new Date(date);
-            return isNaN(parsedDate.getTime()) ? null : parsedDate;
+            return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
         }
-        return null;
+        return undefined;
     }, z.date().refine((date) => date > new Date(), {
         message: "Release date must be in the future"
     })),
     genre: z.preprocess((gen) => {
+        if (gen === undefined) return undefined;
         if (typeof gen === 'string') {
             try {
                 return JSON.parse(gen);
@@ -46,6 +48,7 @@ export const movieAddSchema = z.object({
     director: z.string().optional(),
     isPublished: z.coerce.boolean().default(false).optional(),
     cast: z.preprocess((cas) => {
+        if (cas === undefined) return undefined;
         if (typeof cas === 'string') {
             try {
                 return JSON.parse(cas);
