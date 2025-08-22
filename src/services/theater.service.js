@@ -43,8 +43,21 @@ export const addTheater = async (adminId, theaterData) => {
     }
 };
 
-export const getAllTheaters = async ({page = 1, limit = 10, search = ''}) => {
+export const getAllTheaters = async (adminId, {page = 1, limit = 10, search = ''}) => {
     try {
+        const admin = await prisma.admin.findUnique({
+            where: {
+                adminId: adminId
+            }
+        });
+        if (!admin) {
+            throw new AppError("Theater admin not found", 404);
+        }
+
+        if (admin.role !== "SUPER_ADMIN") {
+            throw new AppError("Unauthorized: You do not have permission to fetch theaters", 403);
+        }
+
         const pageNum = Number(page);
         const limitNum = Number(limit);
         const skip = (pageNum - 1) * limitNum;
@@ -73,8 +86,21 @@ export const getAllTheaters = async ({page = 1, limit = 10, search = ''}) => {
     }
 };
 
-export const getTheaterById = async (theaterId) => {
+export const getTheaterById = async (adminId, theaterId) => {
     try {
+        const admin = await prisma.admin.findUnique({
+            where: {
+                adminId: adminId
+            }
+        });
+        if (!admin) {
+            throw new AppError("Theater admin not found", 404);
+        }
+
+        if (admin.role !== "SUPER_ADMIN") {
+            throw new AppError("Unauthorized: You do not have permission to fetch theaters", 403);
+        }
+
         const theater = await prisma.theaters.findUnique({
             where: {
                 theaterId: theaterId
