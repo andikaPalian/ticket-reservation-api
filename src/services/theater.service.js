@@ -202,33 +202,37 @@ export const deleteTheater = async (adminId, theaterId) => {
             throw new AppError("Theater not found", 404);
         }
 
-        if (theater.screens.length > 0) {
-            await prisma.screens.deleteMany({
-                where: {
-                    theaterId: theaterId
-                }
-            });
-        }
-
-        // If the theater has any admins, remove them/disconnect
-        if (theater.admin.length > 0) {
-            await prisma.theaters.update({
-                where: {
-                    theaterId: theaterId
-                },
-                data: {
-                    admin: {
-                        set: []
+        await prisma.$transaction(async (tx) => {
+            // Delete screens associated with the theater
+            if (theater.screens.length > 0) {
+                await tx.screens.deleteMany({
+                    where: {
+                        theaterId: theaterId
                     }
+                });
+            }
+
+            // Delete admins associated with the theater
+            if (theater.admin.length > 0) {
+                await tx.theaters.update({
+                    where: {
+                        theaterId: theaterId
+                    },
+                    data: {
+                        admin: {
+                            set: []
+                        }
+                    }
+                });
+            }
+
+            // Delete the theater
+            await tx.theaters.delete({
+                where: {
+                    theaterId: theaterId
                 }
             });
-        }
-
-        await prisma.theaters.delete({
-            where: {
-                theaterId: theaterId
-            }
-        });
+        })
     } catch (error) {
         console.error("Theater deletion error: ", error);
         throw error;
