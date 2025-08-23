@@ -101,7 +101,7 @@ export const seatsDataSchema = z.object({
 
 export const theaterScreenCreateSchema = z.object({
     screenData: screenDataSchema,
-    seatDAta: seatsDataSchema
+    seatsData: seatsDataSchema
 });
 
 export const theaterScreenUpdateSchema = screenDataSchema;
