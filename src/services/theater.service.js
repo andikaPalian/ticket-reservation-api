@@ -440,12 +440,7 @@ export const getScreenByTheater = async (adminId, theaterId) => {
                 theaterId: theaterId
             },
             include: {
-                seats: {
-                    orderBy: {
-                        seatRow: 'asc',
-                        seatNumber: 'asc'
-                    }
-                }
+                seats: true
             }
         });
         if (!screens.length) {
@@ -479,7 +474,9 @@ export const getScreenByTheater = async (adminId, theaterId) => {
         const seatsStats = await prisma.seats.groupBy({
             by: ['screenId', 'isAvailable'],
             where: {
-                screenId: screenIds
+                screenId: {
+                    in: screenIds
+                }
             },
             _count: {
                 seatId: true,
