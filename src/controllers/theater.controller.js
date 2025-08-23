@@ -123,7 +123,8 @@ export const createTheaterScreenController = async (req, res, next) => {
 
 export const getAllScreensController = async (req, res, next) => {
     try {
-        const screens = await getAllScreens(req.query);
+        const adminId = req.admin.adminId;
+        const screens = await getAllScreens(adminId, req.query);
 
         if (screens.length === 0) {
             return res.status(200).json({

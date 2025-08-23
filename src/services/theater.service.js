@@ -360,8 +360,21 @@ export const createTheaterScreen = async (adminId, theaterId, screenData, seatsD
     }
 };
 
-export const getAllScreens = async ({page = 1, limit = 10}) => {
+export const getAllScreens = async (adminId, {page = 1, limit = 10}) => {
     try {
+        const admin = await prisma.admin.findUnique({
+            where: {
+                adminId: adminId
+            }
+        });
+        if (!admin) {
+            throw new AppError("User not found", 404);
+        }
+
+        if (admin.role !== "SUPER_ADMIN") {
+            throw new AppError("Unauthorized: You do not have permission to view screens", 401);
+        }
+
         const pageNum = Number(page);
         const limitNum = Number(limit);
         const skip = (pageNum - 1) * limitNum;

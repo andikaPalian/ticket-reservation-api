@@ -15,7 +15,7 @@ theaterRouter.delete('/:theaterId/delete', adminAuth, roleCheck(["SUPER_ADMIN"])
 
 // Screens
 theaterRouter.post('/:theaterId/screens/add-screen', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), validateBody(theaterScreenCreateSchema), createTheaterScreenController);
-theaterRouter.get('/screen', getAllScreensController);
+theaterRouter.get('/screen', adminAuth, roleCheck(["SUPER_ADMIN"]), getAllScreensController);
 theaterRouter.get('/:theaterId/screen', getScreenByTheaterController);
 theaterRouter.get('/screen/:screenId', getScreenByIdController);
 theaterRouter.patch('/:theaterId/screen/:screenId/update', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), validateBody(theaterScreenUpdateSchema), updateTheaterScreenController);
