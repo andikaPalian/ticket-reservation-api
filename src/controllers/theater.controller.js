@@ -150,9 +150,10 @@ export const getAllScreensController = async (req, res, next) => {
 
 export const getScreenByTheaterController = async (req, res, next) => {
     try {
+        const adminId = req.admin.adminId;
         const {theaterId} = req.params;
         
-        const screen = await getScreenByTheater(theaterId);
+        const screen = await getScreenByTheater(adminId, theaterId);
 
         return res.status(200).json({
             success: true,

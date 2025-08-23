@@ -368,7 +368,7 @@ export const getAllScreens = async (adminId, {page = 1, limit = 10}) => {
             }
         });
         if (!admin) {
-            throw new AppError("User not found", 404);
+            throw new AppError("Admin not found", 404);
         }
 
         if (admin.role !== "SUPER_ADMIN") {
@@ -405,8 +405,44 @@ export const getAllScreens = async (adminId, {page = 1, limit = 10}) => {
     }
 };
 
-export const getScreenByTheater = async (theaterId) => {
+export const getScreenByTheater = async (adminId, theaterId) => {
     try {
+        const admin = await prisma.admin.findUnique({
+            where: {
+                adminId: adminId
+            }
+        });
+        if (!admin) {
+            throw new AppError("Admin not found", 404);
+        }
+
+        if (!["SUPER_ADMIN", "THEATER_ADMIN"].includes(admin.role)) {
+            throw new AppError("Unauthorized: You do not have permission to view screens", 401);
+        }
+
+        if (admin.role === "THEATER_ADMIN") {
+            const theater = await prisma.theaters.findUnique({
+                where: {
+                    theaterId: theaterId
+                },
+                include: {
+                    admin: {
+                        select: {
+                            adminId: true
+                        }
+                    }
+                }
+            });
+            if (!theater) {
+                throw new AppError("Theater not found", 404);
+            }
+
+            const isTheaterAdmin = theater.admin.some((admin) => admin.adminId === adminId);
+            if (!isTheaterAdmin) {
+                throw new AppError("Unauthorized: You do not have permission to view screens", 401);
+            }
+        }
+
         const screens = await prisma.screens.findMany({
             where: {
                 theaterId: theaterId
