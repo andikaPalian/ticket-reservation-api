@@ -372,7 +372,7 @@ export const getAllScreens = async (adminId, {page = 1, limit = 10}) => {
         }
 
         if (admin.role !== "SUPER_ADMIN") {
-            throw new AppError("Unauthorized: You do not have permission to view screens", 401);
+            throw new AppError("Unauthorized: You do not have permission to view screens", 403);
         }
 
         const pageNum = Number(page);
@@ -385,16 +385,8 @@ export const getAllScreens = async (adminId, {page = 1, limit = 10}) => {
             orderBy: {
                 createdAt: 'desc'
             },
-            select: {
-                screenId: true,
-                name: true,
-                screenCapacity: true,
-                theater: {
-                    select: {
-                        theaterId: true,
-                        name: true
-                    }
-                }
+            include: {
+                seats: true
             }
         });
 
@@ -562,10 +554,8 @@ export const getScreenById = async (adminId, screenId) => {
             where: {
                 screenId: screenId
             },
-            select: {
-                screenId: true,
-                name: true,
-                screenCapacity: true
+            include: {
+                seats: true
             }
         });
 
@@ -707,15 +697,15 @@ export const deleteScreen = async (adminId, theaterId, screenId) => {
         }
 
         await prisma.$transaction(async (prism) => {
-            // Delete screen
-            await prism.screens.delete({
+            // Delete seats
+            await prism.seats.deleteMany({
                 where: {
                     screenId: screenId
                 }
             });
 
-            // Delete seats
-            await prism.seats.deleteMany({
+            // Delete screen
+            await prism.screens.delete({
                 where: {
                     screenId: screenId
                 }
