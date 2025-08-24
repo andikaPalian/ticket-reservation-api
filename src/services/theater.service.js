@@ -912,15 +912,40 @@ export const getSeatsByScreen = async (theaterId, screenId) => {
     }
 };
 
-export const getSeatsById = async (screenId, seatId) => {
+export const getSeatsById = async (theaterId, screenId, seatId) => {
     try {
+        const theater = await prisma.theaters.findUnique({
+            where: {
+                theaterId: theaterId
+            },
+            include: {
+                screens: true
+            }
+        });
+        if (!theater) {
+            throw new AppError("Theater not found", 404);
+        }
+
         const screen = await prisma.screens.findUnique({
             where: {
                 screenId: screenId
+            },
+            include: {
+                seats: true
             }
         });
         if (!screen) {
             throw new AppError("Screen not found", 404);
+        }
+
+        const isScreenOfTheater = theater.screens.some((sceen) => sceen.screenId === screenId);
+        if (!isScreenOfTheater) {
+            throw new AppError("Screen not found in this theater", 404);
+        }
+
+        const isSeatsOfScreen = screen.seats.some((seat) => seat.seatId === seatId);
+        if (!isSeatsOfScreen) {
+            throw new AppError("Seat not found in this screen", 404);
         }
 
         const seat = await prisma.seats.findUnique({

@@ -260,9 +260,9 @@ export const getSeatsByScreemController = async (req, res, next) => {
 
 export const getSeatByIdController = async (req, res, next) => {
     try {
-        const {screenId, seatId} = req.params;
+        const {theaterId, screenId, seatId} = req.params;
 
-        const seat = await getSeatsById(screenId, seatId);
+        const seat = await getSeatsById(theaterId, screenId, seatId);
         
         return res.status(200).json({
             success: true,
