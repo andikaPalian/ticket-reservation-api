@@ -261,6 +261,15 @@ export const getScheduleByMovie = async (movieId) => {
 
 export const getScheduleByScreen = async (screenId) => {
     try {
+        const screen = await prisma.screens.findMany({
+            where: {
+                screenId: screenId
+            }
+        });
+        if (!screen) {
+            throw new AppError("Screen not found", 404);
+        }
+        
         const schedule = await prisma.movieSchedules.findMany({
             where: {
                 screenId: screenId
