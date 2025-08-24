@@ -4,9 +4,8 @@ export const createMovieScheduleController = async (req, res, next) => {
     try {
         const adminId = req.admin.adminId;
         const {theaterId, screenId} = req.params;
-        const {scheduleData} = req.body;
 
-        const newSchedule = await createMovieSchedule(adminId,theaterId, screenId, scheduleData);
+        const newSchedule = await createMovieSchedule(adminId,theaterId, screenId, req.body);
 
         return res.status(201).json({
             success: true,
