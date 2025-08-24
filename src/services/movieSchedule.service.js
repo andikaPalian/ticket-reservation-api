@@ -144,7 +144,7 @@ export const getAllSchedules = async (adminId, {page = 1, limit = 10}) => {
             skip: skip,
             take: limitNum,
             orderBy: {
-                createdAt: 'desc'
+                startTime: 'desc'
             }
         });
 
