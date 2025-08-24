@@ -3,10 +3,10 @@ import { createMovieSchedule, getAllSchedules, getScheduleById, getScheduleByMov
 export const createMovieScheduleController = async (req, res, next) => {
     try {
         const adminId = req.admin.adminId;
-        const {screenId} = req.params;
+        const {theaterId, screenId} = req.params;
         const {scheduleData} = req.body;
 
-        const newSchedule = await createMovieSchedule(adminId, screenId, scheduleData);
+        const newSchedule = await createMovieSchedule(adminId,theaterId, screenId, scheduleData);
 
         return res.status(201).json({
             success: true,

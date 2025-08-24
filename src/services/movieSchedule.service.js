@@ -3,7 +3,7 @@ import { AppError } from "../utils/errorHandler.js";
 
 const prisma = new PrismaClient();
 
-export const createMovieSchedule = async (adminId, screenId, scheduleData) => {
+export const createMovieSchedule = async (adminId, theaterId, screenId, scheduleData) => {
     try {
         const theaterAdmin = await prisma.admin.findUnique({
             where: {
@@ -18,31 +18,37 @@ export const createMovieSchedule = async (adminId, screenId, scheduleData) => {
             throw new AppError("Unauthorized: You do not have permission to add schedules", 403);
         }
 
-        if (theaterAdmin.role === "THEATER_ADMIN") {
-            const screen = await prisma.screens.findUnique({
-                where: {
-                    screenId: screenId
+        const theater = await prisma.theaters.findUnique({
+            where: {
+                theaterId: theaterId
+            },
+            include: {
+                admin: {
+                    select: {
+                        adminId: true
+                    }
                 },
-                include: {
-                    theater: {
-                        include: {
-                            admin: {
-                                select: {
-                                    adminId: true
-                                }
-                            }
-                        }
+                screens: {
+                    select: {
+                        screenId: true
                     }
                 }
-            });
-            if (!screen) {
-                throw new AppError("Screen not found", 404);
             }
+        });
+        if (!theater) {
+            throw new AppError("Theater not found", 404);
+        }
 
-            const isTheaterAdmin = screen.theater.admin.some((admin) => admin.adminId === adminId);
-            if (!isTheaterAdmin) {
-                throw new AppError("Unauthorized: You do not have permission to add schedules to this screen", 403);
+        if (theaterAdmin.role === "THEATER_ADMIN") {
+            const isTheaterAdmin = theater.admin.some((admin) => admin.adminId === adminId);
+            if  (!isTheaterAdmin) {
+                throw new AppError("Unauthorized: You do not have permission to add schedules", 403);
             }
+        }
+
+        const isScreenOfTheater = theater.screens.some((screen) => screen.screenId === screenId);
+        if (!isScreenOfTheater) {
+            throw new AppError("Screen not found in this theater", 404);
         }
 
         const {movieId, startTime, endTime} = scheduleData;
