@@ -117,8 +117,21 @@ export const createMovieSchedule = async (adminId, theaterId, screenId, schedule
     }
 };
 
-export const getAllSchedules = async ({page = 1, limit = 10}) => {
+export const getAllSchedules = async (adminId, {page = 1, limit = 10}) => {
     try {
+        const admin = await prisma.admin.findUnique({
+            where: {
+                adminId: adminId
+            }
+        });
+        if (!admin) {
+            throw new AppError("Admin not found", 404);
+        }
+
+        if (admin.role !== "SUPER_ADMIN") {
+            throw new AppError("Unauthorized: You do not have permission to view schedules", 403);
+        }
+
         const pageNum = Number(page);
         const limitNum = Number(limit);
         const skip = (pageNum - 1) * limitNum;
@@ -157,6 +170,63 @@ export const getScheduleById = async (scheduleId) => {
         return schedule;
     } catch (error) {
         console.error("Error fetching movie schedule: ", error);
+        throw error;
+    }
+};
+
+export const getScheduleByTheater = async (adminId, theaterId) => {
+    try {
+        const admin = await prisma.admin.findUnique({
+            where: {
+                adminId: adminId
+            }
+        });
+        if (!admin) {
+            throw new AppError("Admin not found", 404);
+        }
+
+        if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(admin.role)) {
+            throw new AppError("Unauthorized: You do not have permission to view schedules", 403);
+        }
+
+        if (admin.role === "THEATER_ADMIN") {
+            const theater = await prisma.theaters.findUnique({
+                where: {
+                    theaterId: theaterId
+                },
+                include: {
+                    admin: {
+                        select: {
+                            adminId: true
+                        }
+                    }
+                }
+            });
+            if (!theater) {
+                throw new AppError("Theater not found", 404);
+            }
+
+            const isTheaterAdmin = theater.admin.some((admin) => admin.adminId === adminId);
+            if (!isTheaterAdmin) {
+                throw new AppError("Unauthorized: You do not have permission to view schedules", 403);
+            }
+        }
+
+        const schedules = await prisma.movieSchedules.findMany({
+            where: {
+                screen: {
+                    theaterId: theaterId
+                }
+            },
+            include: {
+                movie: true,
+                screen: true
+            }
+        });
+
+        return schedules;
+    } catch (error) {
+        console.error("Error fetching movie schedules: ", error);
         throw error;
     }
 };

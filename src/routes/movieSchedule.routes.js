@@ -1,12 +1,13 @@
 import express from 'express';
 import {adminAuth, roleCheck} from '../middlewares/adminMiddleware.js';
 import {userAuth} from '../middlewares/userMiddleware.js';
-import { createMovieScheduleController, deleteScheduleController, findAvailableScreenController, getAllSchedulesController, getAvailableSeatsByScheduleController, getScheduleByDateController, getScheduleByIdController, getScheduleByMovieController, getScheduleByScreenController, updateScheduleController } from '../controllers/movieSchedule.controller.js';
+import { createMovieScheduleController, deleteScheduleController, findAvailableScreenController, getAllSchedulesController, getAvailableSeatsByScheduleController, getScheduleByDateController, getScheduleByIdController, getScheduleByMovieController, getScheduleByScreenController, getScheduleByTheaterController, updateScheduleController } from '../controllers/movieSchedule.controller.js';
 
 export const movieScheduleRouter = express.Router();
 
 movieScheduleRouter.post('/:theaterId/:screenId/create-schedule', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), createMovieScheduleController);
-movieScheduleRouter.get('/', getAllSchedulesController);
+movieScheduleRouter.get('/', adminAuth, roleCheck(["SUPER_ADMIN"]), getAllSchedulesController);
+movieScheduleRouter.get('/:theaterId/schedule', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), getScheduleByTheaterController);
 movieScheduleRouter.get('/:scheduleId', getScheduleByIdController);
 movieScheduleRouter.get('/schedule/:movieId', getScheduleByMovieController);
 movieScheduleRouter.get('/schedule/:screenId', getScheduleByScreenController);

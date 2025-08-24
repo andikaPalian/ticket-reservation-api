@@ -1,4 +1,4 @@
-import { createMovieSchedule, getAllSchedules, getScheduleById, getScheduleByMovie, findAvailableScreen, findAvailableSeats, updateSchedule, deleteSchedule, getAvailableSeatsBySchedule, getScheduleByDate, getScheduleByScreen } from "../services/movieSchedule.service.js";
+import { createMovieSchedule, getAllSchedules, getScheduleById, getScheduleByMovie, findAvailableScreen, findAvailableSeats, updateSchedule, deleteSchedule, getAvailableSeatsBySchedule, getScheduleByDate, getScheduleByScreen, getScheduleByTheater } from "../services/movieSchedule.service.js";
 
 export const createMovieScheduleController = async (req, res, next) => {
     try {
@@ -21,7 +21,8 @@ export const createMovieScheduleController = async (req, res, next) => {
 
 export const getAllSchedulesController = async (req, res, next) => {
     try {
-        const schedules = await getAllSchedules(req.query);
+        const adminId = req.admin.adminId;
+        const schedules = await getAllSchedules(adminId, req.query);
 
         if (schedules.length === 0) {
             return res.status(200).json({
@@ -36,6 +37,35 @@ export const getAllSchedulesController = async (req, res, next) => {
         return res.status(200).json({
             success: true,
             message: "Schedules fetched successfully",
+            data: {
+                schedules: schedules
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getScheduleByTheaterController = async (req, res, next) => {
+    try {
+        const adminId = req.admin.adminId;
+        const {theaterId} = req.params;
+        
+        const schedules = await getScheduleByTheater(adminId, theaterId);
+
+        if (schedules.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No schedule found",
+                data: {
+                    schedules: []
+                }
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Schedule fetched successfully",
             data: {
                 schedules: schedules
             }
