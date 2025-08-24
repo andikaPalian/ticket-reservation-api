@@ -233,6 +233,15 @@ export const getScheduleByTheater = async (adminId, theaterId) => {
 
 export const getScheduleByMovie = async (movieId) => {
     try {
+        const movie = await prisma.movies.findUnique({
+            where: {
+                movieId: movieId
+            }
+        });
+        if (!movie) {
+            throw new AppError("Movie not found", 404);
+        }
+
         const schedule = await prisma.movieSchedules.findMany({
             where: {
                 movieId: movieId

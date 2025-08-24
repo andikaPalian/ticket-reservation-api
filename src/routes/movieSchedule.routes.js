@@ -9,7 +9,7 @@ movieScheduleRouter.post('/:theaterId/:screenId/create-schedule', adminAuth, rol
 movieScheduleRouter.get('/', adminAuth, roleCheck(["SUPER_ADMIN"]), getAllSchedulesController);
 movieScheduleRouter.get('/:theaterId/schedule', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), getScheduleByTheaterController);
 movieScheduleRouter.get('/:scheduleId', getScheduleByIdController);
-movieScheduleRouter.get('/schedule/:movieId', getScheduleByMovieController);
+movieScheduleRouter.get('/movie/:movieId', getScheduleByMovieController);
 movieScheduleRouter.get('/schedule/:screenId', getScheduleByScreenController);
 movieScheduleRouter.get('/schedule', getScheduleByDateController);
 movieScheduleRouter.get('/schedule/:theaterId', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), findAvailableScreenController);
