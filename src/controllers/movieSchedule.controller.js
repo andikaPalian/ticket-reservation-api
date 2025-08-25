@@ -188,10 +188,9 @@ export const findAvailableScreenController = async (req, res, next) => {
 
 export const findAvailableSeatsController = async (req, res, next) => {
     try {
-        const userId = req.user.userId;
-        const {screenId} = req.params;
+        const {theaterId, screenId, scheduleId} = req.params;
 
-        const availableSeats = await findAvailableSeats(userId, screenId);
+        const availableSeats = await findAvailableSeats(theaterId, screenId, scheduleId);
 
         return res.status(200).json({
             success: true,

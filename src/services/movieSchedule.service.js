@@ -406,15 +406,48 @@ export const findAvailableScreen = async (adminId, theaterId) => {
     }
 };
 
-export const findAvailableSeats = async (userId, screenId) => {
+export const findAvailableSeats = async (theaterId, screenId, scheduleId) => {
     try {
-        const user = await prisma.user.findUnique({
+        const theater = await prisma.theaters.findUnique({
             where: {
-                userId: userId
+                theaterId: theaterId
+            },
+            include: {
+                screens: {
+                    select: {
+                        screenId: true
+                    }
+                }
             }
         });
-        if (!user) {
-            throw new AppError("User not found", 404);
+        if (!theater) {
+            throw new AppError("Theater not found", 404);
+        }
+
+        const isScreenOfTheater = theater.screens.some((screen) => screen.screenId === screenId);
+        if (!isScreenOfTheater) {
+            throw new AppError("Screen not found in this theater", 404);
+        }
+
+        const schedule = await prisma.movieSchedules.findUnique({
+            where: {
+                scheduleId: scheduleId
+            }
+        });
+        if (!schedule) {
+            throw new AppError("Schedule not found", 404);
+        }
+
+        if (schedule.screenId !== screenId) {
+            throw new AppError("Schedule does not belong to this screen", 400);
+        }
+
+        const now = new Date();
+        // if (now < schedule.startTime || now > schedule.endTime) {
+        //     throw new AppError("Schedule is not ongoing", 400);
+        // }
+        if (schedule.endTime < now) {
+            throw new AppError("This schedule has already ended", 400);
         }
 
         const seats = await prisma.seats.findMany({
@@ -424,7 +457,19 @@ export const findAvailableSeats = async (userId, screenId) => {
             }
         });
 
-        return seats;
+        const seatsResponse = [];
+        for (const seat of seats) {
+            const seatsNames = seat.seatRow + seat.seatNumber;
+            seatsResponse.push({
+                seatId: seat.seatId,
+                seat: seatsNames,
+                seatType: seat.seatType,
+                seatPrice: seat.seatPrice,
+                isAvailable: seat.isAvailable
+            });
+        }
+
+        return seatsResponse;
     } catch (error) {
         console.error("Error finding available seats: ", error);
         throw error;
