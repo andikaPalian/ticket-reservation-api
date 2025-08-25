@@ -31,7 +31,7 @@ app.use('/api/user/auth', userAuthRouter);
 app.use('/api/admin/auth', adminAuthRouter);
 app.use('/api/movies', movieRouter);
 app.use('/api/theaters', theaterRouter);
-app.use('/api/chedules', movieScheduleRouter);
+app.use('/api/schedules', movieScheduleRouter);
 app.use('/api/tickets', ticketRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/theaterAdmin', theaterAdminRouter);
