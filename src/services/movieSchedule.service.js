@@ -370,11 +370,24 @@ export const findAvailableScreen = async (adminId, theaterId) => {
                 theaterId: theaterId
             },
             include: {
-                theater: true
+                theater: true,
+                schedules: true
             }
         });
 
-        return screens.map((screen) => {
+        const availabelScreen = screens.filter((screen) => {
+            const now = new Date();
+            // Chedk if there is no schedule or all schedules are not ongoing
+            return !screen.schedules.some((schedule) => schedule.startTime < now && schedule.endTime > now);
+        });
+        if (availabelScreen.length === 0) {
+            return {
+                screen: [],
+                message: "No available screen found"
+            };
+        }
+
+        return availabelScreen.map((screen) => {
             const availableSeats = seatStats.find((seat) => seat.screenId === screen.screenId && seat.isAvailable === true)?._count.seatId || 0;
 
             const totalSeats = seatStats
