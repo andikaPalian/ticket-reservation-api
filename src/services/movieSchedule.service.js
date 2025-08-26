@@ -406,7 +406,7 @@ export const findAvailableScreen = async (adminId, theaterId) => {
     }
 };
 
-export const findAvailableSeats = async (theaterId, screenId, scheduleId) => {
+export const findSeats = async (theaterId, screenId, scheduleId) => {
     try {
         const theater = await prisma.theaters.findUnique({
             where: {
@@ -453,7 +453,7 @@ export const findAvailableSeats = async (theaterId, screenId, scheduleId) => {
         const seats = await prisma.seats.findMany({
             where: {
                 screenId: screenId,
-                isAvailable: true
+                // isAvailable: true
             }
         });
 
@@ -476,41 +476,41 @@ export const findAvailableSeats = async (theaterId, screenId, scheduleId) => {
     }
 };
 
-export const getAvailableSeatsBySchedule = async (userId, scheduleId) => {
-    try {
-        const user = await prisma.user.findUnique({
-            where: {
-                userId: userId
-            }
-        });
-        if (!user) {
-            throw new AppError("User not found", 404);
-        }
+// export const getAvailableSeatsBySchedule = async (userId, scheduleId) => {
+//     try {
+//         const user = await prisma.user.findUnique({
+//             where: {
+//                 userId: userId
+//             }
+//         });
+//         if (!user) {
+//             throw new AppError("User not found", 404);
+//         }
 
-        const availableSeats = await prisma.movieSchedules.findUnique({
-            where: {
-                scheduleId: scheduleId
-            },
-            include: {
-                movie: true,
-                screen: {
-                    include: {
-                        seats: {
-                            where: {
-                                isAvailable: true
-                            }
-                        }
-                    }
-                }
-            }
-        });
+//         const availableSeats = await prisma.movieSchedules.findUnique({
+//             where: {
+//                 scheduleId: scheduleId
+//             },
+//             include: {
+//                 movie: true,
+//                 screen: {
+//                     include: {
+//                         seats: {
+//                             where: {
+//                                 isAvailable: true
+//                             }
+//                         }
+//                     }
+//                 }
+//             }
+//         });
 
-        return availableSeats;
-    } catch (error) {
-        console.error("Error finding available seats by schedule: ", error);
-        throw error;
-    }
-};
+//         return availableSeats;
+//     } catch (error) {
+//         console.error("Error finding available seats by schedule: ", error);
+//         throw error;
+//     }
+// };
 
 export const updateSchedule = async (adminId, scheduleId, scheduleData) => {
     try {

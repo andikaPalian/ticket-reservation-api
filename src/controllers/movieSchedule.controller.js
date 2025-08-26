@@ -1,4 +1,4 @@
-import { createMovieSchedule, getAllSchedules, getScheduleById, getScheduleByMovie, findAvailableScreen, findAvailableSeats, updateSchedule, deleteSchedule, getAvailableSeatsBySchedule, getScheduleByDate, getScheduleByScreen, getScheduleByTheater } from "../services/movieSchedule.service.js";
+import { createMovieSchedule, getAllSchedules, getScheduleById, getScheduleByMovie, findAvailableScreen, updateSchedule, deleteSchedule, getAvailableSeatsBySchedule, getScheduleByDate, getScheduleByScreen, getScheduleByTheater, findSeats } from "../services/movieSchedule.service.js";
 
 export const createMovieScheduleController = async (req, res, next) => {
     try {
@@ -186,11 +186,11 @@ export const findAvailableScreenController = async (req, res, next) => {
     }
 };
 
-export const findAvailableSeatsController = async (req, res, next) => {
+export const findSeatsController = async (req, res, next) => {
     try {
         const {theaterId, screenId, scheduleId} = req.params;
 
-        const availableSeats = await findAvailableSeats(theaterId, screenId, scheduleId);
+        const availableSeats = await findSeats(theaterId, screenId, scheduleId);
 
         return res.status(200).json({
             success: true,
@@ -224,24 +224,24 @@ export const updateScheduleController = async (req, res, next) => {
     }
 };
 
-export const getAvailableSeatsByScheduleController = async (req, res, next) => {
-    try {
-        const userId = req.user.userId;
-        const {scheduleId} = req.params;
+// export const getAvailableSeatsByScheduleController = async (req, res, next) => {
+//     try {
+//         const userId = req.user.userId;
+//         const {scheduleId} = req.params;
 
-        const availableSeats = await getAvailableSeatsBySchedule(userId, scheduleId);
+//         const availableSeats = await getAvailableSeatsBySchedule(userId, scheduleId);
 
-        return res.status(200).json({
-            success: true,
-            message: "Available seats fetched successfully",
-            data: {
-                seats: availableSeats
-            }
-        });
-    } catch (error) {
-        next(error);
-    }
-};
+//         return res.status(200).json({
+//             success: true,
+//             message: "Available seats fetched successfully",
+//             data: {
+//                 seats: availableSeats
+//             }
+//         });
+//     } catch (error) {
+//         next(error);
+//     }
+// };
 
 export const deleteScheduleController = async (req, res, next) => {
     try {
