@@ -66,11 +66,20 @@ model User {
   password  String
   name      String
   stripeCustomerId  String? // Untuk simpan ID customer Stripe
+  isVerified Boolean  @default(false)
+  verificationToken String? // Untuk email verification
+  verificationTokenExpiry DateTime?
+  resetPasswordToken String? // Untuk reset password
+  resetPasswordTokenExpiry DateTime?
   // theaters  Theaters[]
   // seats     Seats[]
   tickets   Tickets[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+
+  @@index([email])
+  @@index([verificationToken])
+  @@index([resetPasswordToken])
 }
 
 model Theaters {
