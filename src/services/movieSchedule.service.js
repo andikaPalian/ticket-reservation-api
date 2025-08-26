@@ -512,7 +512,7 @@ export const findSeats = async (theaterId, screenId, scheduleId) => {
 //     }
 // };
 
-export const updateSchedule = async (adminId, scheduleId, scheduleData) => {
+export const updateSchedule = async (adminId, theaterId, scheduleId, scheduleData) => {
     try {
         const theaterAdmin = await prisma.admin.findUnique({
             where: {
@@ -528,31 +528,23 @@ export const updateSchedule = async (adminId, scheduleId, scheduleData) => {
         }
 
         if (theaterAdmin.role === "THEATER_ADMIN") {
-            const schedule = await prisma.movieSchedules.findUnique({
+            const theater = await prisma.theaters.findUnique({
                 where: {
-                    scheduleId: scheduleId
+                    theaterId: theaterId
                 },
                 include: {
-                    screen: {
-                        include: {
-                            theater: {
-                                include: {
-                                    admin: {
-                                        select: {
-                                            adminId: true
-                                        }
-                                    }
-                                }
-                            }
+                    admin: {
+                        select: {
+                            adminId: true
                         }
                     }
                 }
             });
-            if (!schedule) {
-                throw new AppError("Schedule not found", 404);
+            if (!theater) {
+                throw new AppError("Theater not found", 404);
             }
 
-            const isTheaterAdmin = schedule.screen.theater.admin.some((admin) => admin.adminId === adminId);
+            const isTheaterAdmin = theater.admin.some((admin) => admin.adminId === adminId);
             if (!isTheaterAdmin) {
                 throw new AppError("Unauthorized: You do not have permission to update theaters", 403);
             }
@@ -630,7 +622,7 @@ export const updateSchedule = async (adminId, scheduleId, scheduleData) => {
     }
 };
 
-export const deleteSchedule = async (adminId, scheduleId) => {
+export const deleteSchedule = async (adminId, theaterId, scheduleId) => {
     try {
         const theaterAdmin = await prisma.admin.findUnique({
             where: {
@@ -646,31 +638,23 @@ export const deleteSchedule = async (adminId, scheduleId) => {
         }
 
         if (theaterAdmin.role === "THEATER_ADMIN") {
-            const schedule = await prisma.movieSchedules.findUnique({
+            const theater = await prisma.theaters.findUnique({
                 where: {
-                    scheduleId: scheduleId
+                    theaterId: theaterId
                 },
                 include: {
-                    screen: {
-                        include: {
-                            theater: {
-                                include: {
-                                    admin: {
-                                        select: {
-                                            adminId: true
-                                        }
-                                    }
-                                }
-                            }
+                    admin: {
+                        select: {
+                            adminId: true
                         }
                     }
                 }
             });
-            if (!schedule) {
-                throw new AppError("Schedule not found", 404);
+            if (!theater) {
+                throw new AppError("Theater not found", 404);
             }
 
-            const isTheaterAdmin = schedule.screen.theater.admin.some((admin) => admin.adminId === adminId);
+            const isTheaterAdmin = theater.admin.some((admin) => admin.adminId === adminId);
             if (!isTheaterAdmin) {
                 throw new AppError("Unauthorized: You do not have permission to delete theaters", 403);
             }

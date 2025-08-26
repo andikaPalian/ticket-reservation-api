@@ -1,4 +1,4 @@
-import { createMovieSchedule, getAllSchedules, getScheduleById, getScheduleByMovie, findAvailableScreen, updateSchedule, deleteSchedule, getAvailableSeatsBySchedule, getScheduleByDate, getScheduleByScreen, getScheduleByTheater, findSeats } from "../services/movieSchedule.service.js";
+import { createMovieSchedule, getAllSchedules, getScheduleById, getScheduleByMovie, findAvailableScreen, updateSchedule, deleteSchedule, getScheduleByDate, getScheduleByScreen, getScheduleByTheater, findSeats } from "../services/movieSchedule.service.js";
 
 export const createMovieScheduleController = async (req, res, next) => {
     try {
@@ -207,10 +207,9 @@ export const findSeatsController = async (req, res, next) => {
 export const updateScheduleController = async (req, res, next) => {
     try {
         const adminId = req.admin.adminId;
-        const {scheduleId} = req.params;
-        const {scheduleData} = req.body;
+        const {theaterId, scheduleId} = req.params;
 
-        const updatedSchedule = await updateSchedule(adminId, scheduleId, scheduleData);
+        const updatedSchedule = await updateSchedule(adminId, theaterId, scheduleId, req.body);
 
         return res.status(200).json({
             success: true,
@@ -246,9 +245,9 @@ export const updateScheduleController = async (req, res, next) => {
 export const deleteScheduleController = async (req, res, next) => {
     try {
         const adminId = req.admin.adminId;
-        const {scheduleId} = req.params;
+        const {theaterId, scheduleId} = req.params;
 
-        await deleteSchedule(adminId, scheduleId);
+        await deleteSchedule(adminId, theaterId, scheduleId);
 
         return res.status(200).json({
             success: true,
