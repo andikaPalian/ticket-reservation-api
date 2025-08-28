@@ -23,5 +23,5 @@ theaterRouter.delete('/:theaterId/screen/:screenId/delete', adminAuth, roleCheck
 
 // Seats
 theaterRouter.patch('/:theaterId/screen/:screenId/seats/update', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), validateBody(theaterScreenSeatsUpdatedSchema), updateScreenSeatsController);
-theaterRouter.get('/:theaterId/screen/:screenId/seats', getSeatsByScreemController);
-theaterRouter.get('/:theaterId/screen/:screenId/seats/:seatId', getSeatByIdController);
+theaterRouter.get('/:theaterId/screen/:screenId/seats', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), getSeatsByScreemController);
+theaterRouter.get('/:theaterId/screen/:screenId/seats/:seatId', adminAuth, roleCheck(["THEATER_ADMIN", "SUPER_ADMIN"]), getSeatByIdController);
