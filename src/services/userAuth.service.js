@@ -38,7 +38,7 @@ export const userRegister = async ({name, email, password}) => {
 
         // Send verification email
         await transaporter.sendMail({
-            from: process.env.EMAIL_USER,
+            from: process.env.FROM_EMAIL,
             to: email,
             subject: "Email Verification Code",
             text: `Your verification code is ${otp}. It is valid for 5 minutes.`
