@@ -281,31 +281,62 @@ export const getTicketById = async (adminId, ticketId) => {
                 ticketId: ticketId
             },
             include: {
-                user: true,
+                user: {
+                    select: {
+                        userId: true,
+                        email: true,
+                        name: true
+                    }
+                },
                 schedule: {
-                    include: {
+                    select: {
+                        scheduleId: true,
+                        startTime: true,
+                        endTime: true,
                         movie: true,
                         screen: {
-                            include: {
-                                theater: {
-                                    include: {
-                                        admin: {
-                                            select: {
-                                                adminId: true
-                                            }
-                                        }
+                            select: {
+                                screenId: true,
+                                name: true,
+                                screenCapacity: true,
+                                theater: true,
+                                seats: {
+                                    select: {
+                                        seatId: true,
+                                        seatRow: true,
+                                        seatNumber: true,
+                                        seatType: true,
+                                        seatPrice: true,
+                                        isAvailable: true
                                     }
                                 }
                             }
                         }
                     }
                 },
-                seat: true
             }
         });
 
         if (admin.role === "THEATER_ADMIN") {
-            const isTheaterAdmin = ticket.schedule.screen.theater.admin.some((admin) => admin.adminId === adminId);
+            const theaterId = ticket.schedule.screen.theater.theaterId;
+
+            const theater = await prisma.theaters.findUnique({
+                where: {
+                    theaterId: theaterId
+                },
+                include: {
+                    admin: {
+                        select: {
+                            adminId: true
+                        }
+                    }
+                }
+            });
+            if (!theater) {
+                throw new AppError("Theater not found", 404);
+            }
+
+            const isTheaterAdmin = theater.admin.some((admin) => admin.adminId === adminId);
             if (!isTheaterAdmin) {
                 throw new AppError("Unauthorized: You do not have permission to view this ticket", 403);
             }
