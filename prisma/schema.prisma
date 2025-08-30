@@ -173,7 +173,7 @@ model MovieSchedules {
 model Tickets {
   ticketId           String         @id @default(uuid())
   ticketNumber       String         @unique  // Untuk di tampilkan ke UI
-  qrCodeToken        String         @unique  // Untuk qr code scanning 
+  qrCodeToken        String?         @unique  // Untuk qr code scanning 
   price              Decimal  
   status             TicketStatus   @default(PENDING)
   scheduleId         String
@@ -181,7 +181,7 @@ model Tickets {
   userId             String
   user               User           @relation(fields: [userId], references: [userId])
   stripePaymentIntentId             String?   // Simpan payment intent ID Stripe
-  stripeId           String         
+  stripeId           String?         
   seatId             String?
   seat               Seats?          @relation(fields: [seatId], references: [seatId])
   seatType           String?
