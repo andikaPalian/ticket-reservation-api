@@ -1,4 +1,4 @@
-import { createTicket, cancelTicket, getAllTickets, getTicketById, getTicketsByUser, generateQrCode, updateTicketStatus, scanTicket } from "../services/ticket.service.js";
+import { createTicket, cancelTicket, getAllTickets, getTicketById, generateQrCode, updateTicketStatus, scanTicket, getTicketHistoryByUser } from "../services/ticket.service.js";
 
 export const createTicketController = async (req, res, next) => {
     try {
@@ -82,18 +82,17 @@ export const getTicketByIdController = async (req, res, next) => {
     }
 };
 
-export const getTicketsByUserController = async (req, res, next) => {
+export const getTicketHistoryByUserController = async (req, res, next) => {
     try {
         const userId = req.user.userId;
+        const {status, page, limit} = req.query;
 
-        const ticket = await getTicketsByUser(userId);
+        const ticket = await getTicketHistoryByUser(userId, status, {page, limit});
 
         return res.status(200).json({
             success: true,
             message: "Tickets fetched successfully",
-            data: {
-                tickets: ticket
-            }
+            data: ticket
         });
     } catch (error) {
         next(error);

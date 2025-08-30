@@ -349,8 +349,12 @@ export const getTicketById = async (adminId, ticketId) => {
     }
 };
 
-export const getTicketsByUser = async (userId) => {
+export const getTicketHistoryByUser = async (userId, statusFilter, {page = 1, limit = 10}) => {
     try {
+        const pageNum = Number(page);
+        const limitNum = Number(limit);
+        const skip = (pageNum - 1) * limitNum;
+
         const user = await prisma.user.findUnique({
             where: {
                 userId: userId
@@ -360,18 +364,80 @@ export const getTicketsByUser = async (userId) => {
             throw new AppError("User not found", 404);
         }
 
+        const whereClause = {
+            userId: userId
+        };
+
+        if (statusFilter && ["PENDING", "PAID", "USED", "CANCELED", "EXPIRED"].includes(statusFilter)) {
+            whereClause.status = statusFilter;
+        }
+
+        const totalTickets = await prisma.tickets.count({
+            where: whereClause
+        });
+
         const tickets = await prisma.tickets.findMany({
-            where: {
-                userId: userId
+            where: whereClause,
+            orderBy: {
+                bookTime: 'desc'
             },
-            include: {
-                user: true,
-                schedule: true,
-                seat: true
+            skip: skip,
+            take: limitNum,
+            select: {
+                ticketId: true,
+                ticketNumber: true,
+                status: true,
+                price: true,
+                bookTime: true,
+                schedule: {
+                    select: {
+                        movie: {
+                            select: {
+                                movieId: true,
+                                title: true
+                            }
+                        },
+                        scheduleId: true,
+                        startTime: true,
+                        screen: {
+                            select: {
+                                screenId: true,
+                                name: true,
+                            }
+                        }
+                    }
+                },
+                seat: {
+                    select: {
+                        seatId: true,
+                        seatRow: true,
+                        seatNumber: true,
+                        seatType: true,
+                        seatPrice: true
+                    }
+                }
             }
         });
 
-        return tickets;
+        const formattedTickets = tickets.map((ticket) => ({
+            ...ticket,
+            seat: {
+                seatId: ticket.seat.seatId,
+                seat: ticket.seat.seatRow + ticket.seat.seatNumber,
+                seatType: ticket.seat.seatType,
+                seatPrice: ticket.seat.seatPrice
+            }
+        }))
+
+        return {
+            tickets: formattedTickets,
+            pagination: {
+                total: totalTickets,
+                page: pageNum,
+                limit: limitNum,
+                totalPages: Math.ceil(totalTickets / limitNum)
+            }
+        };
     } catch (error) {
         console.error("Error getting tickets: ", error);
         throw error;
