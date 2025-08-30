@@ -2,7 +2,7 @@ import { PrismaClient } from "../../generated/prisma/index.js";
 import { AppError } from "../utils/errorHandler.js";
 import QRCode from 'qrcode';
 import { v4 as uuid } from "uuid";
-// import { stripe } from "../config/stripe.js";
+import { stripe } from "../config/stripe.js";
 
 const prisma = new PrismaClient();
 
@@ -163,18 +163,39 @@ export const getAllTickets = async (adminId) => {
         if (admin.role === "SUPER_ADMIN") {
             const tickets = await prisma.tickets.findMany({
                 include: {
-                    user: true,
+                    user: {
+                        select: {
+                            userId: true,
+                            email: true,
+                            name: true
+                        }
+                    },
                     schedule: {
-                        include: {
+                        select: {
+                            scheduleId: true,
+                            startTime: true,
+                            endTime: true,
                             movie: true,
                             screen: {
-                                include: {
-                                    theater: true
+                                select: {
+                                    screenId: true,
+                                    name: true,
+                                    screenCapacity: true,
+                                    theater: true,
+                                    seats: {
+                                        select: {
+                                            seatId: true,
+                                            seatRow: true,
+                                            seatNumber: true,
+                                            seatType: true,
+                                            seatPrice: true,
+                                            isAvailable: true
+                                        }
+                                    }
                                 }
                             }
                         }
                     },
-                    seat: true
                 }
             });
 
@@ -196,18 +217,39 @@ export const getAllTickets = async (adminId) => {
                     }
                 },
                 include: {
-                    user: true,
+                    user: {
+                        select: {
+                            userId: true,
+                            email: true,
+                            name: true
+                        }
+                    },
                     schedule: {
-                        include: {
+                        select: {
+                            scheduleId: true,
+                            startTime: true,
+                            endTime: true,
                             movie: true,
                             screen: {
-                                include: {
-                                    theater: true
+                                select: {
+                                    screenId: true,
+                                    name: true,
+                                    screenCapacity: true,
+                                    theater: true,
+                                    seats: {
+                                        select: {
+                                            seatId: true,
+                                            seatRow: true,
+                                            seatNumber: true,
+                                            seatType: true,
+                                            seatPrice: true,
+                                            isAvailable: true
+                                        }
+                                    }
                                 }
                             }
                         }
                     },
-                    seat: true
                 }
             });
 
