@@ -3,8 +3,10 @@ import { AppError } from "../utils/errorHandler.js";
 
 const prisma = new PrismaClient();
 
+// Admin: Create movie schedule
 export const createMovieSchedule = async (adminId, theaterId, screenId, scheduleData) => {
     try {
+        // Check if the admin is exists or not
         const theaterAdmin = await prisma.admin.findUnique({
             where: {
                 adminId: adminId
@@ -14,10 +16,12 @@ export const createMovieSchedule = async (adminId, theaterId, screenId, schedule
             throw new AppError("Theater admin not found", 404);
         }
 
+        // Check if the admin role is SUPER_ADMIN or THEATER_ADMIN
         if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(theaterAdmin.role)) {
             throw new AppError("Unauthorized: You do not have permission to add schedules", 403);
         }
 
+        // Check if the theater exists
         const theater = await prisma.theaters.findUnique({
             where: {
                 theaterId: theaterId
@@ -39,20 +43,25 @@ export const createMovieSchedule = async (adminId, theaterId, screenId, schedule
             throw new AppError("Theater not found", 404);
         }
 
+        // If the admin role is THEATER_ADMIN, check if the admin is a theater admin of the theater
         if (theaterAdmin.role === "THEATER_ADMIN") {
+            // Validate if the admin is a admin of the theater
             const isTheaterAdmin = theater.admin.some((admin) => admin.adminId === adminId);
             if  (!isTheaterAdmin) {
                 throw new AppError("Unauthorized: You do not have permission to add schedules", 403);
             }
         }
 
+        // Check if the screen exists
         const isScreenOfTheater = theater.screens.some((screen) => screen.screenId === screenId);
         if (!isScreenOfTheater) {
             throw new AppError("Screen not found in this theater", 404);
         }
 
+        // Destructure the schedule data
         const {movieId, startTime, endTime} = scheduleData;
 
+        // Check if the start time is before the end time
         if (new Date(startTime) >= new Date(endTime)) {
             throw new AppError("Start time must be before end time", 400);
         }
@@ -97,6 +106,7 @@ export const createMovieSchedule = async (adminId, theaterId, screenId, schedule
             throw new AppError("Schedule overlaps with existing schedule", 400);
         }
 
+        // Create the movie schedule
         const newSchedule = await prisma.movieSchedules.create({
             data: {
                 movieId: movieId,
@@ -117,8 +127,10 @@ export const createMovieSchedule = async (adminId, theaterId, screenId, schedule
     }
 };
 
+// Admin: Get all movie schedules
 export const getAllSchedules = async (adminId, {page = 1, limit = 10}) => {
     try {
+        // Check if the admin is exists or not
         const admin = await prisma.admin.findUnique({
             where: {
                 adminId: adminId
@@ -128,14 +140,17 @@ export const getAllSchedules = async (adminId, {page = 1, limit = 10}) => {
             throw new AppError("Admin not found", 404);
         }
 
+        // Check if the admin role is SUPER_ADMIN or not
         if (admin.role !== "SUPER_ADMIN") {
             throw new AppError("Unauthorized: You do not have permission to view schedules", 403);
         }
 
+        // Pagination calculation
         const pageNum = Number(page);
         const limitNum = Number(limit);
         const skip = (pageNum - 1) * limitNum;
 
+        // Fetch movbie schedules
         const schedules = await prisma.movieSchedules.findMany({
             include: {
                 movie: true,
@@ -155,8 +170,10 @@ export const getAllSchedules = async (adminId, {page = 1, limit = 10}) => {
     }
 };
 
+// Get movie schedule by ID
 export const getScheduleById = async (scheduleId) => {
     try {
+        // Fetch movie schedule by ID
         const schedule = await prisma.movieSchedules.findUnique({
             where: {
                 scheduleId: scheduleId
@@ -174,8 +191,10 @@ export const getScheduleById = async (scheduleId) => {
     }
 };
 
+// Admin: Get movie schedules by theater
 export const getScheduleByTheater = async (adminId, theaterId) => {
     try {
+        // Check if the admin is exists or not
         const admin = await prisma.admin.findUnique({
             where: {
                 adminId: adminId
@@ -185,11 +204,14 @@ export const getScheduleByTheater = async (adminId, theaterId) => {
             throw new AppError("Admin not found", 404);
         }
 
+        // Check if the admin role is SUPER_ADMIN or THEATER_ADMIN
         if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(admin.role)) {
             throw new AppError("Unauthorized: You do not have permission to view schedules", 403);
         }
 
+        // If the admin role is THEATER_ADMIN, check if the admin is theater admin of the theater
         if (admin.role === "THEATER_ADMIN") {
+            // Check if the theater exists
             const theater = await prisma.theaters.findUnique({
                 where: {
                     theaterId: theaterId
@@ -206,12 +228,14 @@ export const getScheduleByTheater = async (adminId, theaterId) => {
                 throw new AppError("Theater not found", 404);
             }
 
+            // Check if the admin is admin of the theater
             const isTheaterAdmin = theater.admin.some((admin) => admin.adminId === adminId);
             if (!isTheaterAdmin) {
                 throw new AppError("Unauthorized: You do not have permission to view schedules", 403);
             }
         }
 
+        // Fetch movie schedules
         const schedules = await prisma.movieSchedules.findMany({
             where: {
                 screen: {
@@ -231,8 +255,10 @@ export const getScheduleByTheater = async (adminId, theaterId) => {
     }
 };
 
+// Get movie schedule by movie
 export const getScheduleByMovie = async (movieId) => {
     try {
+        // Check if the movie exists
         const movie = await prisma.movies.findUnique({
             where: {
                 movieId: movieId
@@ -242,6 +268,7 @@ export const getScheduleByMovie = async (movieId) => {
             throw new AppError("Movie not found", 404);
         }
 
+        // Fetch movie schedules that belong to the movie
         const schedule = await prisma.movieSchedules.findMany({
             where: {
                 movieId: movieId
@@ -259,8 +286,10 @@ export const getScheduleByMovie = async (movieId) => {
     }
 };
 
+// Get movie schedule by screen
 export const getScheduleByScreen = async (screenId) => {
     try {
+        // Check if the screen exists
         const screen = await prisma.screens.findMany({
             where: {
                 screenId: screenId
@@ -270,6 +299,7 @@ export const getScheduleByScreen = async (screenId) => {
             throw new AppError("Screen not found", 404);
         }
         
+        // Fetch movie schedules that belong to the screeb
         const schedule = await prisma.movieSchedules.findMany({
             where: {
                 screenId: screenId
@@ -287,13 +317,16 @@ export const getScheduleByScreen = async (screenId) => {
     }
 };
 
+// Get movie schedule by date
 export const getScheduleByDate = async (date) => {
     try {
+        // Set a time stamps in the beginning and end of the day (one full day) based on specified date
         const start = new Date(date);
         start.setHours(0, 0, 0, 0);
         const end = new Date(date);
         end.setHours(23, 59, 59, 999);
 
+        // Fetch movie schedules based on the time stamps
         const schedule = await prisma.movieSchedules.findMany({
             where: {
                 startTime: {
@@ -314,8 +347,10 @@ export const getScheduleByDate = async (date) => {
     }
 };
 
+// Admin: Find available screen
 export const findAvailableScreen = async (adminId, theaterId) => {
     try {
+        // Check if the admin is exists or not
         const theaterAdmin = await prisma.admin.findUnique({
             where: {
                 adminId: adminId
@@ -325,11 +360,14 @@ export const findAvailableScreen = async (adminId, theaterId) => {
             throw new AppError("Theater admin not found", 404);
         }
 
+        // Check if the admin role is SUPER_ADMIN or THEATER_ADMIN
         if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(theaterAdmin.role)) {
             throw new AppError("Unauthorized: You do not have permission to add theaters", 403);
         }
 
+        // If the admin role is THEATER_ADMIN, check if the admin is theater admin of the theater
         if (theaterAdmin.role === "THEATER_ADMIN") {
+            // Check if the theater exists and include admin
             const theater = await prisma.theaters.findUnique({
                 where: {
                     theaterId: theaterId
@@ -346,6 +384,7 @@ export const findAvailableScreen = async (adminId, theaterId) => {
                 throw new AppError("Theater not found", 404);
             }
 
+            // Check if the admin is admin of the theater
             const isTheaterAdmin = theater.admin.some((admin) => admin.adminId === adminId);
             if (!isTheaterAdmin) {
                 throw new AppError("Unauthorized: You do not have permission to add theaters", 403);
@@ -365,6 +404,7 @@ export const findAvailableScreen = async (adminId, theaterId) => {
             }
         });
 
+        // Fetch screens of the theater include theater and schedules
         const screens = await prisma.screens.findMany({
             where: {
                 theaterId: theaterId
@@ -375,6 +415,7 @@ export const findAvailableScreen = async (adminId, theaterId) => {
             }
         });
 
+        // Check if there is no schedule or all schedules are not ongoing
         const availabelScreen = screens.filter((screen) => {
             const now = new Date();
             // Chedk if there is no schedule or all schedules are not ongoing
@@ -387,7 +428,9 @@ export const findAvailableScreen = async (adminId, theaterId) => {
             };
         }
 
+        // Return available screen with available and total seats
         return availabelScreen.map((screen) => {
+            // Find available seats and total seats
             const availableSeats = seatStats.find((seat) => seat.screenId === screen.screenId && seat.isAvailable === true)?._count.seatId || 0;
 
             const totalSeats = seatStats
@@ -406,8 +449,10 @@ export const findAvailableScreen = async (adminId, theaterId) => {
     }
 };
 
+// User: Find available seats
 export const findSeats = async (theaterId, screenId, scheduleId) => {
     try {
+        // Check if the theater exists
         const theater = await prisma.theaters.findUnique({
             where: {
                 theaterId: theaterId
@@ -424,11 +469,13 @@ export const findSeats = async (theaterId, screenId, scheduleId) => {
             throw new AppError("Theater not found", 404);
         }
 
+        // Validate if the screen is in the theater
         const isScreenOfTheater = theater.screens.some((screen) => screen.screenId === screenId);
         if (!isScreenOfTheater) {
             throw new AppError("Screen not found in this theater", 404);
         }
 
+        // Check if the schedule exists
         const schedule = await prisma.movieSchedules.findUnique({
             where: {
                 scheduleId: scheduleId
@@ -438,10 +485,12 @@ export const findSeats = async (theaterId, screenId, scheduleId) => {
             throw new AppError("Schedule not found", 404);
         }
 
+        // Validate if the schedule belongs to the screen
         if (schedule.screenId !== screenId) {
             throw new AppError("Schedule does not belong to this screen", 400);
         }
 
+        // Validate if the schedule is ongoing or already ended
         const now = new Date();
         // if (now < schedule.startTime || now > schedule.endTime) {
         //     throw new AppError("Schedule is not ongoing", 400);
@@ -450,6 +499,7 @@ export const findSeats = async (theaterId, screenId, scheduleId) => {
             throw new AppError("This schedule has already ended", 400);
         }
 
+        // Fetch seats
         const seats = await prisma.seats.findMany({
             where: {
                 screenId: screenId,
@@ -457,6 +507,7 @@ export const findSeats = async (theaterId, screenId, scheduleId) => {
             }
         });
 
+        // Return customized response of available seats
         const seatsResponse = [];
         for (const seat of seats) {
             const seatsNames = seat.seatRow + seat.seatNumber;
@@ -512,8 +563,10 @@ export const findSeats = async (theaterId, screenId, scheduleId) => {
 //     }
 // };
 
+// Admin: Update schedule
 export const updateSchedule = async (adminId, theaterId, scheduleId, scheduleData) => {
     try {
+        // Check if the admin is exists or not
         const theaterAdmin = await prisma.admin.findUnique({
             where: {
                 adminId: adminId
@@ -523,11 +576,14 @@ export const updateSchedule = async (adminId, theaterId, scheduleId, scheduleDat
             throw new AppError("Theater admin not found", 404);
         }
 
+        // Check if the admin role is SUPER_ADMIN or THEATER_ADMIN
         if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(theaterAdmin.role)) {
             throw new AppError("Unauthorized: You do not have permission to update theaters", 403);
         }
 
+        // If the admin role is THEATER_ADMIN, check if the admin is theater admin of the theater
         if (theaterAdmin.role === "THEATER_ADMIN") {
+            // Check if the theater exists or not
             const theater = await prisma.theaters.findUnique({
                 where: {
                     theaterId: theaterId
@@ -544,12 +600,14 @@ export const updateSchedule = async (adminId, theaterId, scheduleId, scheduleDat
                 throw new AppError("Theater not found", 404);
             }
 
+            // Validate if the admin is theater admin of the theater
             const isTheaterAdmin = theater.admin.some((admin) => admin.adminId === adminId);
             if (!isTheaterAdmin) {
                 throw new AppError("Unauthorized: You do not have permission to update theaters", 403);
             }
         }
 
+        // Check if the schedule exists or not
         const schedule = await prisma.movieSchedules.findUnique({
             where: {
                 scheduleId: scheduleId
@@ -561,8 +619,10 @@ export const updateSchedule = async (adminId, theaterId, scheduleId, scheduleDat
 
         // const {movieId, screenId, startTime, endTime} = scheduleData;
 
+        // Create update data
         const updateData = {};
 
+        // Check if any field is updated
         if (scheduleData.movieId !== undefined) {
             // Check if the movie exist
             const movie = await prisma.movies.findUnique({
@@ -604,6 +664,7 @@ export const updateSchedule = async (adminId, theaterId, scheduleId, scheduleDat
             updateData.endTime = scheduleData.endTime;
         }
 
+        // Update schedule data
         const updatedSchedule = await prisma.movieSchedules.update({
             where: {
                 scheduleId: scheduleId
@@ -622,8 +683,10 @@ export const updateSchedule = async (adminId, theaterId, scheduleId, scheduleDat
     }
 };
 
+// Admin: Delete schedule
 export const deleteSchedule = async (adminId, theaterId, scheduleId) => {
     try {
+        // Check if the admin is exists or not
         const theaterAdmin = await prisma.admin.findUnique({
             where: {
                 adminId: adminId
@@ -633,11 +696,14 @@ export const deleteSchedule = async (adminId, theaterId, scheduleId) => {
             throw new AppError("Theater admin not found", 404);
         }
 
+        // Check if the admin role is SUPER_ADMIN or THEATER_ADMIN
         if (!["THEATER_ADMIN", "SUPER_ADMIN"].includes(theaterAdmin.role)) {
             throw new AppError("Unauthorized: You do not have permission to delete theaters", 403);
         }
 
+        // If the admin role is THEATER_ADMIN check if the admin is theater admin of the theater
         if (theaterAdmin.role === "THEATER_ADMIN") {
+            // Check if the theater exists or not
             const theater = await prisma.theaters.findUnique({
                 where: {
                     theaterId: theaterId
@@ -654,12 +720,14 @@ export const deleteSchedule = async (adminId, theaterId, scheduleId) => {
                 throw new AppError("Theater not found", 404);
             }
 
+            // Validate if the admin is theater admin of the theater
             const isTheaterAdmin = theater.admin.some((admin) => admin.adminId === adminId);
             if (!isTheaterAdmin) {
                 throw new AppError("Unauthorized: You do not have permission to delete theaters", 403);
             }
         }
 
+        // Check if the schedule exists or not
         const schedule = await prisma.movieSchedules.findUnique({
             where: {
                 scheduleId: scheduleId
@@ -672,10 +740,12 @@ export const deleteSchedule = async (adminId, theaterId, scheduleId) => {
             throw new AppError("Schedule not found", 404);
         }
 
+        // Check if the schedule has already started
         if (schedule.startTime < new Date()) {
             throw new AppError("Cannot delete a schedule that has already started", 404);
         }
 
+        // If the schedule has tickets, delete them
         if (schedule.tickets && schedule.tickets.length > 0) {
             await prisma.tickets.deleteMany({
                 where: {
@@ -684,6 +754,7 @@ export const deleteSchedule = async (adminId, theaterId, scheduleId) => {
             });
         }
 
+        // Delete schedule
         await prisma.movieSchedules.delete({
             where: {
                 scheduleId: scheduleId
