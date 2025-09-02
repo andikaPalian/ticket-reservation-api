@@ -4,8 +4,10 @@ import { AppError } from "../utils/errorHandler.js";
 
 const prisma = new PrismaClient();
 
+// User: Create a payment intent
 export const createPaymentIntent = async (userId, ticketIds) => {
     try {
+        // Check if the user exists or not
         const user = await prisma.user.findUnique({
             where: {
                 userId: userId
@@ -15,6 +17,7 @@ export const createPaymentIntent = async (userId, ticketIds) => {
             throw new AppError("User not found", 404);
         }
 
+        // Check if the tickets exist or not
         const tickets = await prisma.tickets.findMany({
             where: {
                 ticketId: {
@@ -50,6 +53,7 @@ export const createPaymentIntent = async (userId, ticketIds) => {
             }
         }
 
+        // Create a Stripe customer if it doesn't exist
         if (!stripeCustomerId) {
             const stripeCustomer = await stripe.customers.create({
                 email: user.email,
@@ -83,6 +87,7 @@ export const createPaymentIntent = async (userId, ticketIds) => {
                 });
             }
 
+            // Update the tickets with the payment intent
             await tx.tickets.updateMany({
                 where: {
                     ticketId: {
@@ -104,7 +109,9 @@ export const createPaymentIntent = async (userId, ticketIds) => {
     }
 };
 
+// Handle stripe webhook
 export const handleStripeWebhook = async (rawBody, sigHeader) => {
+    // Endpoint secret
     const endPointSecret = process.env.STRIPE_WEBHOOK_SECRET;
     let event;
 
@@ -190,8 +197,10 @@ export const handleStripeWebhook = async (rawBody, sigHeader) => {
     }
 };
 
+// User: Cancel a payment
 export const cancelPaymentIntent = async (userId, paymentIntentId) => {
     try {
+        // Check if the user exists
         const user = await prisma.user.findUnique({
             where: {
                 userId: userId
@@ -201,6 +210,7 @@ export const cancelPaymentIntent = async (userId, paymentIntentId) => {
             throw new AppError("User not found", 404);
         }
 
+        // Fetch the tickets that belong to the user
         const tickets = await prisma.tickets.findMany({
             where: {
                 stripePaymentIntentId: paymentIntentId,
@@ -211,8 +221,10 @@ export const cancelPaymentIntent = async (userId, paymentIntentId) => {
             throw new AppError("Tickets not found or access denied", 404)
         }
 
+        // Cancel the payment intent
         const cancelPayment = await stripe.paymentIntents.cancel(paymentIntentId);
 
+        // Update the tickets with the canceled status
         await prisma.tickets.updateMany({
             where: {
                 stripePaymentIntentId: paymentIntentId
@@ -229,8 +241,10 @@ export const cancelPaymentIntent = async (userId, paymentIntentId) => {
     }
 };
 
+// User: Get payment status
 export const getPaymentStatus = async (userId, paymentIntentId) => {
     try {
+        // Check if the user exists
         const user = await prisma.user.findUnique({
             where: {
                 userId: userId
@@ -240,6 +254,7 @@ export const getPaymentStatus = async (userId, paymentIntentId) => {
             throw new AppError("User not found", 404);
         }
 
+        // Fetch the tickets that belong to the user
         const tickets = await prisma.tickets.findMany({
             where: {
                 stripePaymentIntentId: paymentIntentId,
@@ -250,6 +265,7 @@ export const getPaymentStatus = async (userId, paymentIntentId) => {
             throw new AppError("Tickets not found or access denied", 404);
         }
 
+        // Get the poyment intent
         const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
         return {
